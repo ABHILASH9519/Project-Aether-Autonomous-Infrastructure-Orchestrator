@@ -19,6 +19,11 @@ Modern infrastructure produces alerts, logs and events, but humans often still h
 
 ## System overview
 
+![AETHER architecture](docs/architecture/aether-system.svg)
+
+The visual below is the planned event-to-action pipeline; it does **not** imply the entire platform is implemented.
+
+
 ```mermaid
 flowchart LR
     Operator[Operator / CLI] --> API[Control API - Go]
