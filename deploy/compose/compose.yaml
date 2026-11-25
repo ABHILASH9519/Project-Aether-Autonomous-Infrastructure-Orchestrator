@@ -1,0 +1,12 @@
+services:
+  control-api:
+    build:
+      context: ../../services/control-api
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      PORT: "8080"
+    healthcheck:
+      test: ["CMD", "/aether-control-api", "--healthcheck"]
+      disable: true # distroless image has no curl/shell; use external health checks.
+    restart: unless-stopped
