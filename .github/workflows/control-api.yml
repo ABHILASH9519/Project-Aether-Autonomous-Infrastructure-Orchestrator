@@ -1,0 +1,34 @@
+name: Control API
+on:
+  push:
+    paths:
+      - "services/control-api/**"
+      - ".github/workflows/control-api.yml"
+  pull_request:
+    paths:
+      - "services/control-api/**"
+      - ".github/workflows/control-api.yml"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/control-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/control-api/go.mod
+          cache-dependency-path: services/control-api/go.mod
+      - name: Go formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          test -z "$unformatted" || { echo "$unformatted"; exit 1; }
+      - name: Unit tests
+        run: go test -race ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Build
+        run: go build ./cmd/server
