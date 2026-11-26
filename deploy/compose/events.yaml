@@ -149,6 +149,32 @@ services:
       - "127.0.0.1:3000:3000"
     depends_on:
       - prometheus
+  fixture:
+    profiles: ["workflow"]
+    build:
+      context: ../../services/event-fabric
+    entrypoint: ["/fixture"]
+    environment:
+      FIXTURE_DIR: /tmp/aether-fixtures
+    read_only: true
+    tmpfs:
+      - /tmp:uid=65532,gid=65532,mode=0700
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+  executor:
+    profiles: ["workflow"]
+    build:
+      context: ../../services/event-fabric
+    entrypoint: ["/executor"]
+    environment:
+      DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
+      LAB_FIXTURE_URL: http://fixture:8083
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fixture:
+        condition: service_started
 volumes:
   kafka-data:
   incident-data:

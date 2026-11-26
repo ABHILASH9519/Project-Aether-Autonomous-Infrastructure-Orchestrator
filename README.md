@@ -117,7 +117,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 02 | Kafka event fabric | Prior end-to-end CI passed |
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
-| 05 | Workflow orchestration and policy engine | OPA role authorization and simulation committed; verification pending |
+| 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
 | 06 | Ansible and Puppet automation | Planned |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Planned |
@@ -208,3 +208,17 @@ flowchart LR
 ```
 
 Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. Policy integration CI pending. Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
+
+## Durable lab execution
+
+```mermaid
+flowchart LR
+ Approved -->|execute_lab| Transaction[Atomic incident + job insert]
+ Transaction --> Jobs[(PostgreSQL job queue)]
+ Jobs --> Worker[Go executor]
+ Worker -->|PUT fixed health marker| Fixture[Isolated Go fixture]
+ Worker -->|GET verify contents| Fixture
+ Worker -->|verified / retries exhausted| Audit[(Incident + audit)]
+```
+
+The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). New integration verification pending.
