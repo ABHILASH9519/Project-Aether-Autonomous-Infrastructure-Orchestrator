@@ -19,6 +19,7 @@ import (
 
 type Repository interface {
 	Incident(context.Context,string)(store.Incident,error)
+	Job(context.Context,string)(store.Job,error)
 	Transition(context.Context,string,int64,string,string)(store.Incident,error)
 }
 
@@ -35,6 +36,10 @@ func Handler(repo Repository, token, approver string, gate policy.Gate) (http.Ha
 	mux.HandleFunc("GET /api/v1/incidents/{id}",func(w http.ResponseWriter,r *http.Request){
 		i,err:=repo.Incident(r.Context(),r.PathValue("id"))
 		respond(w,i,err)
+	})
+	mux.HandleFunc("GET /api/v1/incidents/{id}/job",func(w http.ResponseWriter,r *http.Request){
+		j,err:=repo.Job(r.Context(),r.PathValue("id"))
+		respond(w,j,err)
 	})
 	mux.HandleFunc("POST /api/v1/incidents/{id}/transitions",func(w http.ResponseWriter,r *http.Request){
 		r.Body=http.MaxBytesReader(w,r.Body,4096)
@@ -76,10 +81,10 @@ func Handler(repo Repository, token, approver string, gate policy.Gate) (http.Ha
 	}),nil
 }
 
-func respond(w http.ResponseWriter,i store.Incident,err error){
+func respond(w http.ResponseWriter,i any,err error){
 	if err!=nil{
 		switch{
-		case errors.Is(err,sql.ErrNoRows):http.Error(w,"incident not found",404)
+		case errors.Is(err,sql.ErrNoRows):http.Error(w,"resource not found",404)
 		case errors.Is(err,store.ErrVersion),errors.Is(err,lifecycle.ErrTransition):http.Error(w,"transition conflict",409)
 		default:http.Error(w,"storage unavailable",503)
 		}

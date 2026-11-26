@@ -11,6 +11,7 @@ import (
 )
 
 type fakeRepo struct { calls int; err error }
+func (f *fakeRepo) Job(context.Context,string)(store.Job,error){return store.Job{Status:"succeeded",Attempts:1},f.err}
 func (f *fakeRepo) Incident(context.Context,string)(store.Incident,error){return store.Incident{},f.err}
 func (f *fakeRepo) Transition(context.Context,string,int64,string,string)(store.Incident,error){f.calls++;return store.Incident{},f.err}
 
@@ -56,4 +57,19 @@ func TestUnavailablePolicyCannotMutate(t *testing.T){
 func TestIdenticalCredentialsRejected(t *testing.T){
 	const token="test-only-operator-token-123456"
 	if _,err:=Handler(&fakeRepo{},token,token,testGate{});err==nil{t.Fatal("identical tokens accepted")}
+}
+
+func TestJobReadRequiresCredential(t *testing.T){
+	const operator="test-only-operator-token-123456"
+	h,err:=Handler(&fakeRepo{},operator,"test-only-approver-token-654321",testGate{})
+	if err!=nil{t.Fatal(err)}
+	for _,authorized:=range []bool{false,true}{
+		req:=httptest.NewRequest("GET","/api/v1/incidents/test/job",nil)
+		want:=401
+		if authorized{req.Header.Set("Authorization","Bearer "+operator);want=200}
+		w:=httptest.NewRecorder()
+		h.ServeHTTP(w,req)
+		if w.Code!=want{t.Fatalf("got %d want %d",w.Code,want)}
+		if authorized && !strings.Contains(w.Body.String(),`"status":"succeeded"`){t.Fatal(w.Body.String())}
+	}
 }

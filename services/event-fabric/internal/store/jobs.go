@@ -54,3 +54,17 @@ available_at=now()+($3 * interval '2 seconds'),updated_at=now() WHERE correlatio
 	if err=tx.Commit();err!=nil{return false,err}
 	return true,nil
 }
+
+type Job struct {
+	CorrelationID string `json:"correlation_id"`
+	Status string `json:"status"`
+	Attempts int `json:"attempts"`
+	Evidence string `json:"evidence"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (s Store) Job(ctx context.Context,id string)(Job,error){
+	var j Job
+	err:=s.DB.QueryRowContext(ctx,"SELECT correlation_id,status,attempts,evidence,updated_at FROM remediation_jobs WHERE correlation_id=$1",id).Scan(&j.CorrelationID,&j.Status,&j.Attempts,&j.Evidence,&j.UpdatedAt)
+	return j,err
+}

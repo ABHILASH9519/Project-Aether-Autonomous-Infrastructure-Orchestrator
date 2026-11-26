@@ -23,7 +23,10 @@ transition 1 request_approval awaiting_approval
 transition 2 approve approved
 transition 3 execute_lab executing
 for i in {1..30}; do
-  if curl -fsS -H "$auth" "$url" | jq -e '.state=="resolved" and .version==6' >/dev/null; then exit 0; fi
+  if curl -fsS -H "$auth" "$url" | jq -e '.state=="resolved" and .version==6' >/dev/null; then
+    curl -fsS -H "$auth" "$url/job" | jq -e '.status=="succeeded" and .attempts>=1 and .attempts<=3 and .evidence=="fixture content verified"'
+    exit 0
+  fi
   sleep 2
 done
 echo "lab execution did not resolve incident" >&2

@@ -7,3 +7,5 @@ The executor and fixture are separate Go processes. The fixture writes a fixed h
 ## Validation
 
 Run `bash tests/execution-smoke.sh` against the local workflow profile. The smoke test requires both distinct role tokens, curl and jq. It verifies approval cannot be bypassed and polls for a verified resolved incident. Database integration tests cover success and retry exhaustion. The worker holds database locks across bounded network operations; it does not claim exactly-once effects. The fixture endpoint is unauthenticated on the private Compose network and is not host-published. CI results are pending.
+
+Authenticated operators and approvers can inspect `GET /api/v1/incidents/{id}/job` for status, recorded attempts, bounded evidence and update timestamp. Job data is not exposed through unauthenticated metrics.
