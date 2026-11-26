@@ -121,7 +121,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 06 | Ansible and Puppet automation | Isolated convergence/drift lab committed; workflow adapter pending |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
-| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard; prior integration CI passed; tracing pending |
+| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard verified; HTTP-to-Kafka OTLP tracing committed |
 | 10 | Chaos engineering and security | Planned |
 
 ## Durable event processing
@@ -194,7 +194,7 @@ docker compose -f deploy/compose/events.yaml --profile workflow --profile observ
 - Grafana: http://localhost:3000 (local anonymous viewer, provisioned AETHER HTTP operations dashboard)
 - Metrics: http://localhost:8081/metrics and http://localhost:8082/metrics
 
-See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only; prior monitoring smoke tests passed. OpenTelemetry tracing, worker metrics and alerts remain planned.
+See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only; prior monitoring smoke tests passed. HTTP-to-Kafka OpenTelemetry tracing is now optional; worker metrics and alerts remain planned.
 
 ## Policy-based authorization
 
@@ -230,3 +230,7 @@ Ansible and Puppet enforce a version-controlled desired configuration, demonstra
 ## Kubernetes deployment
 
 A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An optional manual-sync Argo CD Application is included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). This chart uses disposable storage and locally loaded images, not production persistence or image promotion.
+
+## Distributed tracing
+
+Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). CI verification pending; outbox and execution spans are not yet connected.

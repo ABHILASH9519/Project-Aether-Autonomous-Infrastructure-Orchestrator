@@ -16,12 +16,16 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/event"
+	"aether/event-fabric/internal/telemetry"
 	"github.com/segmentio/kafka-go"
 )
 
 func main(){
 	ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
 	defer stop()
+	shutdown,err:=telemetry.Init(ctx,"aether-consumer")
+	if err!=nil{log.Fatal(err)}
+	defer func(){c,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_ = shutdown(c)}()
 	b:=os.Getenv("KAFKA_BROKERS")
 	if b==""{b="localhost:9092"}
 	brokers:=strings.Split(b,",")
@@ -39,17 +43,19 @@ func main(){
 	for ctx.Err()==nil{
 		m,err:=r.FetchMessage(ctx)
 		if err!=nil{if ctx.Err()==nil{log.Printf("fetch: %v",err);select{case <-ctx.Done():case <-time.After(time.Second):}};continue}
+		msgCtx,span:=telemetry.Consumer(ctx,m)
 		var e event.Envelope
 		d:=json.NewDecoder(bytes.NewReader(m.Value))
 		d.DisallowUnknownFields()
 		if d.Decode(&e)!=nil || e.Validate()!=nil || d.Decode(new(any))!=io.EOF{
 			// Stop on failed DLQ publication; never commit past a failed record.
-			if err=dlq.WriteMessages(ctx,kafka.Message{Key:m.Key,Value:m.Value});err!=nil{log.Fatalf("DLQ failed: %v",err)}
+			if err=dlq.WriteMessages(msgCtx,kafka.Message{Key:m.Key,Value:m.Value});err!=nil{log.Fatalf("DLQ failed: %v",err)}
 		}else{
-			applied,err:=st.Apply(ctx,e)
+			applied,err:=st.Apply(msgCtx,e)
 			if err!=nil{log.Fatalf("database apply failed: %v",err)}
 			log.Printf("incident event_id=%q correlation_id=%q type=%q applied=%t",e.ID,e.CorrelationID,e.Type,applied)
 		}
+		span.End()
 		if err=r.CommitMessages(ctx,m);err!=nil{log.Fatalf("commit failed: %v",err)}
 	}
 }
