@@ -1,4 +1,17 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: local-dev-only
+      POSTGRES_DB: aether
+    volumes:
+      - incident-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aether -d aether"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
   kafka:
     image: apache/kafka:3.9.1
     environment:
@@ -47,10 +60,14 @@ services:
       context: ../../services/event-fabric
     entrypoint: ["/consumer"]
     environment:
+      DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       KAFKA_BROKERS: kafka:29092
     restart: on-failure
     depends_on:
+      postgres:
+        condition: service_healthy
       topics:
         condition: service_completed_successfully
 volumes:
   kafka-data:
+  incident-data:
