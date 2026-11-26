@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/event"
+	"aether/event-fabric/internal/metrics"
 	"aether/event-fabric/internal/ingest"
 	"github.com/segmentio/kafka-go"
 )
@@ -25,6 +26,6 @@ func main(){
 	if brokers==""{brokers="localhost:9092"}
 	w:=&kafka.Writer{Addr:kafka.TCP(strings.Split(brokers,",")...),Topic:"aether.events.v1",Balancer:&kafka.Hash{},RequiredAcks:kafka.RequireAll,WriteTimeout:4*time.Second,BatchTimeout:10*time.Millisecond}
 	defer w.Close()
-	s:=&http.Server{Addr:":8081",Handler:ingest.Handler(publisher{w}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second}
+	s:=&http.Server{Addr:":8081",Handler:(&metrics.HTTP{}).Wrap(ingest.Handler(publisher{w})),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second}
 	log.Fatal(s.ListenAndServe())
 }
