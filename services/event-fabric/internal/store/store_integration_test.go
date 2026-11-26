@@ -24,7 +24,7 @@ func TestPersistenceAndRelay(t *testing.T) {
  s:=Store{DB:db}
  if err=s.Migrate(ctx);err!=nil {t.Fatal(err)}
  // Test database must be dedicated and disposable.
- if _,err=db.ExecContext(ctx,"TRUNCATE incident_audit, incident_outbox, incidents, incident_inbox");err!=nil {t.Fatal(err)}
+ if _,err=db.ExecContext(ctx,"TRUNCATE remediation_jobs, incident_audit, incident_outbox, incidents, incident_inbox");err!=nil {t.Fatal(err)}
  e:=event.Envelope{ID:"test-1",Type:"Infrastructure.Alert",Version:1,OccurredAt:time.Now(),Source:"test",CorrelationID:"incident-1",Payload:json.RawMessage("{}")}
  for _,want:=range []bool{true,false} {
   got,err:=s.Apply(ctx,e)

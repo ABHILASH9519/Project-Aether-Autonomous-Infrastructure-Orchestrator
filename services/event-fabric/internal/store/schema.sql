@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS incident_outbox_pending ON incident_outbox(id) WHERE 
 
 ALTER TABLE incidents ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 0;
 ALTER TABLE incidents DROP CONSTRAINT IF EXISTS incidents_state_check;
-ALTER TABLE incidents ADD CONSTRAINT incidents_state_check CHECK (state IN ('open','acknowledged','awaiting_approval','approved','rejected','executing','verifying','resolved'));
+ALTER TABLE incidents ADD CONSTRAINT incidents_state_check CHECK (state IN ('open','acknowledged','awaiting_approval','approved','rejected','executing','verifying','resolved','failed'));
 CREATE TABLE IF NOT EXISTS incident_audit (
  correlation_id text NOT NULL REFERENCES incidents(correlation_id),
  version bigint NOT NULL,
@@ -32,4 +32,17 @@ CREATE TABLE IF NOT EXISTS incident_audit (
  PRIMARY KEY (correlation_id,version)
 );
 
-ALTER TABLE incident_audit ADD COLUMN IF NOT EXISTS actor_role text NOT NULL DEFAULT 'legacy' CHECK (actor_role IN ('operator','approver','legacy'));
+ALTER TABLE incident_audit ADD COLUMN IF NOT EXISTS actor_role text NOT NULL DEFAULT 'legacy' CHECK (actor_role IN ('operator','approver','legacy','worker'));
+
+ALTER TABLE incident_audit DROP CONSTRAINT IF EXISTS incident_audit_actor_role_check;
+ALTER TABLE incident_audit ADD CONSTRAINT incident_audit_actor_role_check CHECK (actor_role IN ('operator','approver','legacy','worker'));
+
+CREATE TABLE IF NOT EXISTS remediation_jobs (
+ correlation_id text PRIMARY KEY REFERENCES incidents(correlation_id),
+ status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','succeeded','failed')),
+ attempts integer NOT NULL DEFAULT 0 CHECK (attempts BETWEEN 0 AND 3),
+ available_at timestamptz NOT NULL DEFAULT now(),
+ evidence text NOT NULL DEFAULT '',
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS remediation_jobs_pending ON remediation_jobs(available_at) WHERE status='pending';

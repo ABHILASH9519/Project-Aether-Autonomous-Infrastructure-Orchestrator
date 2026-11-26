@@ -7,7 +7,7 @@ default allow := false
 allow if {
 	input.mode == "simulation"
 	input.role == "operator"
-	input.action in {"acknowledge", "request_approval", "simulate"}
+	input.action in {"acknowledge", "request_approval", "simulate", "execute_lab"}
 }
 
 allow if {

@@ -22,6 +22,8 @@ func Plan(state, action string) ([]Step, error) {
 		return []Step{{"approved", action}}, nil
 	case state == "awaiting_approval" && action == "reject":
 		return []Step{{"rejected", action}}, nil
+	case state == "approved" && action == "execute_lab":
+		return []Step{{"executing", action}}, nil
 	case state == "approved" && action == "simulate":
 		return []Step{{"executing", "simulate_start"}, {"verifying", "simulate_verify"}, {"resolved", "simulate_complete"}}, nil
 	default:

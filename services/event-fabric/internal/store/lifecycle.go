@@ -27,6 +27,7 @@ func (s Store) Incident(ctx context.Context,id string) (Incident,error) {
 // All simulation steps and audit entries commit together.
 func (s Store) Transition(ctx context.Context,id string,expected int64,action,role string) (Incident,error) {
 	if role!="operator" && role!="approver" {return Incident{},ErrRole}
+	if (action=="approve" || action=="reject") != (role=="approver") {return Incident{},ErrRole}
 	tx,err:=s.DB.BeginTx(ctx,nil)
 	if err!=nil{return Incident{},err}
 	defer tx.Rollback()
@@ -44,6 +45,9 @@ func (s Store) Transition(ctx context.Context,id string,expected int64,action,ro
 	}
 	_,err=tx.ExecContext(ctx,"UPDATE incidents SET state=$2,version=$3,updated_at=now() WHERE correlation_id=$1",id,i.State,i.Version)
 	if err!=nil{return Incident{},err}
+	if action=="execute_lab" {
+		if _,err=tx.ExecContext(ctx,"INSERT INTO remediation_jobs(correlation_id) VALUES($1)",id);err!=nil{return Incident{},err}
+	}
 	if err=tx.Commit();err!=nil{return Incident{},err}
 	return i,nil
 }
