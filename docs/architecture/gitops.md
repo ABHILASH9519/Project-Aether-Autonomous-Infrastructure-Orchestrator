@@ -32,3 +32,7 @@ kubectl -n argocd get application aether-local
 ```
 
 The committed Application tracks main. For reproducible local tests, patch targetRevision to the exact Git SHA corresponding to the loaded image and export AETHER_GIT_REVISION before running tests/gitops-smoke.sh. Do not deploy this over a separately Helm-managed release. This is a local lab: installing Argo CD requires cluster admin access; the application project scope is not a replacement for cluster security controls. CI does not test production credential management, pruning, promotion, HA, or a container registry.
+
+## Verified integration
+
+[GitOps CI run 45901613370](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45901613370) passed on commit `34e1f7d1ee8f3368ffdf1822b27033d29c00cb27`. All steps succeeded: cluster creation, chart lint, image preload, controller installation, scoped application bootstrap, Git sync, approval/execution smoke tests and self-healing after the fixture deployment was scaled to zero. The application returned to Healthy and Synced at the expected revision. This verifies controller behavior in a disposable cluster, not production deployment or registry promotion.

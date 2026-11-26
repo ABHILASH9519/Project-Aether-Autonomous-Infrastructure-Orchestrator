@@ -133,7 +133,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 05 | Workflow orchestration and policy engine | OPA and default lab execution verified in prior CI |
 | 06 | Ansible and Puppet automation | Standalone and approved Ansible/Puppet adapter CI passed |
 | 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence round-trip CI passed |
-| 08 | Kubernetes, Helm and GitOps | Helm/kind verified; Argo CD sync and self-heal CI added |
+| 08 | Kubernetes, Helm and GitOps | Helm/kind and Argo CD sync/self-healing CI passed |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics, dashboard and HTTP-to-Kafka tracing verified in prior CI |
 | 10 | Chaos engineering and security | OPA and Redis outage drills CI passed; broader chaos/security pending |
 
@@ -267,10 +267,10 @@ The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.m
 | LocalStack evidence export | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136) |
 | Redis outage recovery and cloud smoke | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136) |
 | Approved Ansible/Puppet adapter | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190166) |
-| Argo CD sync and replica self-healing | New dedicated GitOps CI; verification pending |
+| Argo CD sync and replica self-healing | [34e1f7d / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45901613370) |
 
 These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, durable Kubernetes storage, live cloud execution, full trace coverage and registry-based image promotion remain outside the verified scope.
 
 ## GitOps reconciliation
 
-The dedicated Argo CD workflow installs a pinned controller, deploys the exact commit through Git (not Helm install), runs approval and execution smoke tests, and checks recovery from replica drift. See [GitOps architecture and local setup](docs/architecture/gitops.md). Automated pruning is disabled. The controller integration result is pending.
+The dedicated Argo CD workflow installs a pinned controller, deploys the exact commit through Git (not Helm install), runs approval and execution smoke tests, and checks recovery from replica drift. See [GitOps architecture and local setup](docs/architecture/gitops.md). Automated pruning is disabled. Controller integration passed in [run 45901613370](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45901613370): the exact Git revision synced successfully, the approved workflow completed, and Argo CD restored the fixture from zero to one replica.
