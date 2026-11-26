@@ -122,7 +122,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence export lab committed; CI pending |
 | 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard verified; HTTP-to-Kafka OTLP tracing committed |
-| 10 | Chaos engineering and security | Planned |
+| 10 | Chaos engineering and security | OPA outage verified; Redis outage drill committed; broader chaos/security pending |
 
 ## Durable event processing
 
@@ -238,3 +238,7 @@ Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the obse
 ## Local cloud evidence archive
 
 The opt-in `cloud` Compose profile uses LocalStack S3 to archive verified remediation evidence. The smoke script exports authenticated job metadata and checks a byte-for-byte download. See [local cloud lab](docs/architecture/cloud-evidence.md). This is an explicit lab export, not continuous cloud archival; no live AWS account is required.
+
+## Failure drills
+
+The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.md) and [Redis fail-closed outage and recovery](docs/runbooks/redis-outage.md). These deliberately stop disposable local services; never run them against production.

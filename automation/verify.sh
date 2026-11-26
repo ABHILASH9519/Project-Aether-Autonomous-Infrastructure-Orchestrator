@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export ANSIBLE_NOCOLOR=1
+mkdir -p "$HOME/.puppet/cache" /tmp/puppet-conf /tmp/puppet-var /tmp/puppet-run
 expected=$'mode=healthy\nreplicas=1'
 ansible-playbook -i localhost, /lab/ansible/site.yml
 test "$(cat /tmp/aether-ansible/workload.conf)" = "$expected"
