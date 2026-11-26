@@ -12,8 +12,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+  kafka-volume-init:
+    image: apache/kafka:3.9.1
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-ec"]
+    command: ["chown -R 1000:1000 /tmp/kraft-combined-logs"]
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
   kafka:
     image: apache/kafka:3.9.1
+    user: "1000:1000"
+    depends_on:
+      kafka-volume-init:
+        condition: service_completed_successfully
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
