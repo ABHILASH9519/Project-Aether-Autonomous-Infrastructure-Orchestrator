@@ -1,0 +1,11 @@
+# Optional overlay: select fixed configuration reconciliation as the lab fixture backend.
+services:
+  fixture:
+    build:
+      context: ../..
+      dockerfile: automation/adapter.Dockerfile
+    environment:
+      AETHER_CONFIG_RECONCILE: "true"
+  executor:
+    environment:
+      LAB_REPAIR_TIMEOUT: 45s

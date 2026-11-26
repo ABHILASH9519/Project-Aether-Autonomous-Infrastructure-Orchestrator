@@ -131,7 +131,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
 | 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
-| 06 | Ansible and Puppet automation | Isolated convergence/drift lab committed; workflow adapter pending |
+| 06 | Ansible and Puppet automation | Isolated convergence/drift lab and approved adapter committed; CI pending |
 | 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence export lab committed; CI pending |
 | 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard verified; HTTP-to-Kafka OTLP tracing committed |
@@ -238,7 +238,7 @@ The `execute_lab` action queues an approved job. A separate worker applies an id
 
 ## Configuration management lab
 
-Ansible and Puppet enforce a version-controlled desired configuration, demonstrate idempotence, and correct injected drift inside a disposable container. See [architecture and run instructions](docs/architecture/configuration-management.md). This standalone lab is not yet connected to the approved execution worker.
+Ansible and Puppet enforce a version-controlled desired configuration, demonstrate idempotence, and correct injected drift inside a disposable container. See [architecture and run instructions](docs/architecture/configuration-management.md). An optional Compose overlay connects a fixed Ansible/Puppet reconciliation adapter to the approved execution worker; see the linked guide.
 
 ## Kubernetes deployment
 

@@ -17,10 +17,12 @@ type Adapter struct {
 	client *http.Client
 }
 
-func NewAdapter(raw string)(*Adapter,error){
+func NewAdapter(raw string)(*Adapter,error){return NewAdapterWithTimeout(raw,2*time.Second)}
+func NewAdapterWithTimeout(raw string,timeout time.Duration)(*Adapter,error){
+	if timeout<=0 || timeout>45*time.Second{return nil,errors.New("invalid fixture timeout")}
 	u,err:=url.Parse(raw)
 	if err!=nil || u.Host=="" || (u.Scheme!="http" && u.Scheme!="https") || u.User!=nil || u.RawQuery!="" || u.Fragment!=""{return nil,errors.New("invalid fixture URL")}
-	return &Adapter{strings.TrimRight(raw,"/"),&http.Client{Timeout:2*time.Second,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}},nil
+	return &Adapter{strings.TrimRight(raw,"/"),&http.Client{Timeout:timeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}},nil
 }
 
 // Repair writes the fixed desired content through the fixture API and

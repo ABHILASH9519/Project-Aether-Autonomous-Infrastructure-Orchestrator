@@ -2,7 +2,9 @@
 package lab
 
 import (
+	"context"
 	"crypto/sha256"
+	"sync"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,7 +15,10 @@ const desired = "aether-lab:healthy\n"
 
 // Handler exposes one fixed, idempotent repair operation. IDs are hashed
 // before use as filenames; no caller-supplied paths or contents are accepted.
-func Handler(dir string) http.Handler {
+func Handler(dir string) http.Handler { return HandlerWithConfiguration(dir,nil,nil) }
+
+func HandlerWithConfiguration(dir string, reconcile func(context.Context)error, verify func()error) http.Handler {
+	var mu sync.Mutex
 	mux:=http.NewServeMux()
 	mux.HandleFunc("GET /healthz",func(w http.ResponseWriter,r *http.Request){w.WriteHeader(200)})
 	path:=func(r *http.Request)string{
@@ -21,6 +26,11 @@ func Handler(dir string) http.Handler {
 		return filepath.Join(dir,fmt.Sprintf("%x.fixture",sum))
 	}
 	mux.HandleFunc("PUT /v1/fixtures/{id}",func(w http.ResponseWriter,r *http.Request){
+		if reconcile!=nil {
+			mu.Lock()
+			defer mu.Unlock()
+			if r.Context().Err()!=nil || reconcile(r.Context())!=nil || verify==nil || verify()!=nil{http.Error(w,"configuration repair failed",503);return}
+		}
 		f,err:=os.CreateTemp(dir,".repair-*")
 		if err!=nil{http.Error(w,"fixture unavailable",503);return}
 		defer os.Remove(f.Name())
@@ -30,6 +40,11 @@ func Handler(dir string) http.Handler {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	mux.HandleFunc("GET /v1/fixtures/{id}",func(w http.ResponseWriter,r *http.Request){
+		if verify!=nil {
+			mu.Lock()
+			defer mu.Unlock()
+			if verify()!=nil{http.Error(w,"configuration degraded",503);return}
+		}
 		b,err:=os.ReadFile(path(r))
 		if err!=nil || string(b)!=desired{http.Error(w,"fixture degraded",503);return}
 		w.Header().Set("Content-Type","text/plain")

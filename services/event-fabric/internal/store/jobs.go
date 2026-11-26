@@ -12,7 +12,10 @@ type Repair func(context.Context,string) error
 // RunJob claims a durable job. The adapter must be idempotent because a crash
 // after an external effect and before commit causes a replay.
 // The transaction holds a row lock during bounded adapter I/O.
-func (s Store) RunJob(ctx context.Context, repair Repair) (bool,error) {
+func (s Store) RunJob(ctx context.Context, repair Repair) (bool,error) {return s.RunJobWithTimeout(ctx,repair,5*time.Second)}
+
+func (s Store) RunJobWithTimeout(ctx context.Context,repair Repair,timeout time.Duration)(bool,error){
+	if timeout<=0 || timeout>45*time.Second{return false,errors.New("invalid job timeout")}
 	tx,err:=s.DB.BeginTx(ctx,nil)
 	if err!=nil{return false,err}
 	defer tx.Rollback()
@@ -28,7 +31,7 @@ LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id,&attempts)
 	if err=tx.QueryRowContext(ctx,"SELECT state,version FROM incidents WHERE correlation_id=$1 FOR UPDATE",id).Scan(&state,&version);err!=nil{return false,err}
 	if state!="executing"{return false,errors.New("job incident is not executing")}
 	attempts++
-	opctx,cancel:=context.WithTimeout(ctx,5*time.Second)
+	opctx,cancel:=context.WithTimeout(ctx,timeout)
 	repairErr:=repair(opctx,id)
 	cancel()
 	if ctx.Err()!=nil{return false,ctx.Err()}
