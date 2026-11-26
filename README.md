@@ -82,3 +82,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Architecture decisions should be documen
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
+
+## Event fabric preview (Phase 2)
+
+The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on the event-fabric development branch. Runtime verification is pending. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
