@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/lifecycle"
+	"aether/event-fabric/internal/policy"
 	"aether/event-fabric/internal/store"
 )
 
@@ -21,9 +22,14 @@ type Repository interface {
 	Transition(context.Context,string,int64,string)(store.Incident,error)
 }
 
-func Handler(repo Repository, token string) (http.Handler,error) {
-	if len(token)<24 { return nil,errors.New("operator token must contain at least 24 characters") }
+type roleKey struct{}
+
+func Handler(repo Repository, token, approver string, gate policy.Gate) (http.Handler,error) {
+	if len(token)<24 || len(approver)<24 || token==approver || gate==nil {
+		return nil,errors.New("distinct operator and approver tokens of at least 24 characters and a policy gate are required")
+	}
 	digest:=sha256.Sum256([]byte(token))
+	approvalDigest:=sha256.Sum256([]byte(approver))
 	mux:=http.NewServeMux()
 	mux.HandleFunc("GET /healthz",func(w http.ResponseWriter,r *http.Request){w.WriteHeader(http.StatusOK)})
 	mux.HandleFunc("GET /api/v1/incidents/{id}",func(w http.ResponseWriter,r *http.Request){
@@ -42,21 +48,29 @@ func Handler(repo Repository, token string) (http.Handler,error) {
 			http.Error(w,"invalid transition request",http.StatusBadRequest)
 			return
 		}
+		role,_:=r.Context().Value(roleKey{}).(string)
+		allowed,err:=gate.Allow(r.Context(),role,cmd.Action)
+		if err!=nil{http.Error(w,"policy unavailable",503);return}
+		if !allowed{http.Error(w,"policy denied",403);return}
 		i,err:=repo.Transition(r.Context(),r.PathValue("id"),*cmd.Version,cmd.Action)
 		respond(w,i,err)
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
 		w.Header().Set("Cache-Control","no-store")
+		role:=""
 		if r.URL.Path!="/healthz" {
 			presented,ok:=strings.CutPrefix(r.Header.Get("Authorization"),"Bearer ")
 			got:=sha256.Sum256([]byte(presented))
-			if !ok || subtle.ConstantTimeCompare(got[:],digest[:])!=1 {
+			operatorMatch:=subtle.ConstantTimeCompare(got[:],digest[:])
+			approverMatch:=subtle.ConstantTimeCompare(got[:],approvalDigest[:])
+			if !ok || operatorMatch+approverMatch!=1 {
 				w.Header().Set("WWW-Authenticate","Bearer")
 				http.Error(w,"unauthorized",http.StatusUnauthorized)
 				return
 			}
+			if operatorMatch==1 {role="operator"}else{role="approver"}
 		}
-		ctx,cancel:=context.WithTimeout(r.Context(),5*time.Second)
+		ctx,cancel:=context.WithTimeout(context.WithValue(r.Context(),roleKey{},role),5*time.Second)
 		defer cancel()
 		mux.ServeHTTP(w,r.WithContext(ctx))
 	}),nil

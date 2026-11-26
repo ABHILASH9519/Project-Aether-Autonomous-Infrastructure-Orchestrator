@@ -116,12 +116,12 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 01 | Repository, architecture and control API | Committed |
 | 02 | Kafka event fabric | Prior end-to-end CI passed |
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
-| 04 | Redis caching and coordination | Shared admission budget implemented; integration verification pending |
-| 05 | Workflow orchestration and policy engine | Local approval simulation committed; OPA and real adapters planned |
+| 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
+| 05 | Workflow orchestration and policy engine | OPA role authorization and simulation committed; verification pending |
 | 06 | Ansible and Puppet automation | Planned |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Planned |
-| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard configured; tracing pending |
+| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard; prior integration CI passed; tracing pending |
 | 10 | Chaos engineering and security | Planned |
 
 ## Durable event processing
@@ -156,16 +156,17 @@ stateDiagram-v2
  verifying --> resolved: simulated completion
 ```
 
-The opt-in workflow API uses a bearer token, version checks and atomic audit inserts. Simulation does not perform any infrastructure changes or prove real recovery. See [workflow architecture and limitations](docs/architecture/workflow.md).
+The opt-in workflow API uses distinct operator/approver bearer tokens, OPA authorization, version checks and atomic audit inserts. Simulation does not perform any infrastructure changes or prove real recovery. See [workflow architecture and limitations](docs/architecture/workflow.md).
 
 ```bash
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
+export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 docker compose -f deploy/compose/events.yaml --profile workflow up -d --build
 bash tests/event-fabric-smoke.sh
 bash tests/workflow-smoke.sh
 ```
 
-**Verification:** [GitHub Actions run 45892838506](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45892838506) passed the prior Kafka/PostgreSQL/Docker workflow baseline. New Redis and observability changes require their own verification. No production deployment or real remediation is supported yet.
+**Verification:** [GitHub Actions run 45892838506](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45892838506) passed the prior Kafka/PostgreSQL/Docker workflow baseline. [Run 45893095275](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45893095275) also passed Redis and monitoring checks. New OPA changes require verification. No production deployment or real remediation is supported yet.
 
 ## Admission control and observability
 
@@ -184,6 +185,7 @@ flowchart LR
 
 ```bash
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
+export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 docker compose -f deploy/compose/events.yaml --profile workflow --profile observability up -d --build
 ```
 
@@ -192,4 +194,17 @@ docker compose -f deploy/compose/events.yaml --profile workflow --profile observ
 - Grafana: http://localhost:3000 (local anonymous viewer, provisioned AETHER HTTP operations dashboard)
 - Metrics: http://localhost:8081/metrics and http://localhost:8082/metrics
 
-See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only and has not yet been runtime verified. OpenTelemetry tracing, worker metrics and alerts remain planned.
+See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only; prior monitoring smoke tests passed. OpenTelemetry tracing, worker metrics and alerts remain planned.
+
+## Policy-based authorization
+
+```mermaid
+flowchart LR
+ Operator --> Workflow[Go Workflow API]
+ Approver --> Workflow
+ Workflow --> OPA[Open Policy Agent]
+ OPA -->|Allow| DB[(Version-checked transaction)]
+ OPA -->|Deny / error| Rejected[403 / 503]
+```
+
+Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. Policy integration CI pending.

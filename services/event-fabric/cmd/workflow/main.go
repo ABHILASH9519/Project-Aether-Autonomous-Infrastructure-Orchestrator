@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/store"
+	"aether/event-fabric/internal/policy"
 	"aether/event-fabric/internal/metrics"
 	"aether/event-fabric/internal/workflow"
 	_ "github.com/lib/pq"
@@ -25,7 +26,9 @@ func main(){
 	defer db.Close()
 	db.SetMaxOpenConns(8)
 	st:=store.Store{DB:db}
-	handler,err:=workflow.Handler(st,os.Getenv("AETHER_OPERATOR_TOKEN"))
+	gate,err:=policy.New(os.Getenv("OPA_URL"))
+	if err!=nil{log.Fatal(err)}
+	handler,err:=workflow.Handler(st,os.Getenv("AETHER_OPERATOR_TOKEN"),os.Getenv("AETHER_APPROVER_TOKEN"),gate)
 	if err!=nil{log.Fatal(err)}
 	initCtx,cancel:=context.WithTimeout(ctx,15*time.Second)
 	err=st.Migrate(initCtx)
