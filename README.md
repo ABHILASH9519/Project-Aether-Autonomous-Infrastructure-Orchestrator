@@ -86,3 +86,40 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 ## Event fabric preview (Phase 2)
 
 The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on the event-fabric development branch. Runtime verification is pending. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
+
+### Event ingestion and processing flow
+
+```mermaid
+flowchart TD
+    A[Infrastructure / Simulated Alert] -->|HTTP POST| B[Telemetry Ingestion Service - Go]
+    B --> C{Event Validation}
+    C -->|Invalid| D[HTTP Rejection]
+    C -->|Valid| E[Kafka Event Topic]
+    E --> F[Incident Consumer - Go]
+    F --> G[Structured Incident Output]
+    F -->|Malformed Event| H[Dead Letter Topic]
+    G -. Future phase .-> I[(PostgreSQL)]
+```
+
+### Kafka architecture
+
+![Kafka architecture — telemetry ingestion, three partitions, incident consumer and dead-letter queue](docs/architecture/kafka-event-fabric.svg)
+
+*Implemented event-processing design. Runtime verification pending.*
+
+Events are routed using their correlation IDs as partition keys. Malformed broker messages are sent to a dead-letter topic before their consumer offsets are committed.
+
+### Overall AETHER development roadmap
+
+| Phase | Milestone | Status |
+| --- | --- | --- |
+| 01 | Repository, architecture and control API | Committed |
+| 02 | Kafka event fabric | Committed · testing pending |
+| 03 | PostgreSQL incident management | Next |
+| 04 | Redis caching and coordination | Planned |
+| 05 | Workflow orchestration and policy engine | Planned |
+| 06 | Ansible and Puppet automation | Planned |
+| 07 | Floci / LocalStack cloud adapters | Planned |
+| 08 | Kubernetes, Helm and GitOps | Planned |
+| 09 | Prometheus, Grafana and OpenTelemetry | Planned |
+| 10 | Chaos engineering and security | Planned |
