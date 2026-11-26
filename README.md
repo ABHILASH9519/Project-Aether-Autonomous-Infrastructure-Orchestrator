@@ -1,7 +1,7 @@
 # AETHER
 ### Autonomous Event-driven Telemetry, Execution & Resilience
 
-> **Status: Phase 4/5 prototype — durable events and approval simulation (integration verification pending).** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
+> **Status: Phase 4/5 prototype — durable events, admission control and approval simulation.** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
 
@@ -114,14 +114,14 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | Phase | Milestone | Status |
 | --- | --- | --- |
 | 01 | Repository, architecture and control API | Committed |
-| 02 | Kafka event fabric | Committed · testing pending |
-| 03 | PostgreSQL incident management | Persistence, versioned transitions and audit committed; integration testing pending |
-| 04 | Redis caching and coordination | Planned |
+| 02 | Kafka event fabric | Prior end-to-end CI passed |
+| 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
+| 04 | Redis caching and coordination | Shared admission budget implemented; integration verification pending |
 | 05 | Workflow orchestration and policy engine | Local approval simulation committed; OPA and real adapters planned |
 | 06 | Ansible and Puppet automation | Planned |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Planned |
-| 09 | Prometheus, Grafana and OpenTelemetry | Planned |
+| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard configured; tracing pending |
 | 10 | Chaos engineering and security | Planned |
 
 ## Durable event processing
@@ -165,4 +165,31 @@ bash tests/event-fabric-smoke.sh
 bash tests/workflow-smoke.sh
 ```
 
-**Verification:** pure lifecycle unit tests passed locally on reproduced sources. Full Kafka/PostgreSQL/Docker integration remains unverified. CI is configured to exercise the database and workflow. No production deployment or real remediation is supported yet.
+**Verification:** [GitHub Actions run 45892838506](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45892838506) passed the prior Kafka/PostgreSQL/Docker workflow baseline. New Redis and observability changes require their own verification. No production deployment or real remediation is supported yet.
+
+## Admission control and observability
+
+```mermaid
+flowchart LR
+ Client --> Ingest[Go ingestion API]
+ Ingest --> Redis[(Redis shared request budget)]
+ Redis -->|Allowed| Kafka[(Kafka)]
+ Redis -->|Exhausted| Reject[429]
+ Redis -->|Unavailable| Unavailable[503]
+ Kafka --> Consumer --> PostgreSQL[(PostgreSQL)]
+ Ingest -. HTTP metrics .-> Prometheus
+ Workflow -. HTTP metrics .-> Prometheus
+ Prometheus --> Grafana
+```
+
+```bash
+export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
+docker compose -f deploy/compose/events.yaml --profile workflow --profile observability up -d --build
+```
+
+- Redis admission: 120 requests per fixed 60-second window shared by ingestion replicas; fail closed on Redis failure.
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000 (local anonymous viewer, provisioned AETHER HTTP operations dashboard)
+- Metrics: http://localhost:8081/metrics and http://localhost:8082/metrics
+
+See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only and has not yet been runtime verified. OpenTelemetry tracing, worker metrics and alerts remain planned.
