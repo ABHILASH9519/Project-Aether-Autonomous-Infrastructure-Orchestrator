@@ -120,7 +120,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
 | 06 | Ansible and Puppet automation | Isolated convergence/drift lab committed; workflow adapter pending |
 | 07 | Floci / LocalStack cloud adapters | Planned |
-| 08 | Kubernetes, Helm and GitOps | Planned |
+| 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard; prior integration CI passed; tracing pending |
 | 10 | Chaos engineering and security | Planned |
 
@@ -226,3 +226,7 @@ The `execute_lab` action queues an approved job. A separate worker applies an id
 ## Configuration management lab
 
 Ansible and Puppet enforce a version-controlled desired configuration, demonstrate idempotence, and correct injected drift inside a disposable container. See [architecture and run instructions](docs/architecture/configuration-management.md). This standalone lab is not yet connected to the approved execution worker.
+
+## Kubernetes deployment
+
+A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An optional manual-sync Argo CD Application is included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). This chart uses disposable storage and locally loaded images, not production persistence or image promotion.

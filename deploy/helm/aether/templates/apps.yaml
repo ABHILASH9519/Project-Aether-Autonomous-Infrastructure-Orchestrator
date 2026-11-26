@@ -1,0 +1,113 @@
+{{- range $name, $cfg := dict "ingest" (dict "port" 8081 "broker" true "redis" true) "consumer" (dict "broker" true "db" true) "relay" (dict "broker" true "db" true) "workflow" (dict "port" 8082 "db" true "policy" true) "executor" (dict "db" true "fixture" true) "fixture" (dict "port" 8083 "lab" true) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command: ["/{{ $name }}"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          env:
+            - name: AETHER_DEPLOYMENT
+              value: local-kubernetes
+            {{- if $cfg.broker }}
+            - name: KAFKA_BROKERS
+              value: kafka:29092
+            {{- end }}
+            {{- if $cfg.redis }}
+            - name: REDIS_ADDR
+              value: redis:6379
+            {{- end }}
+            {{- if $cfg.db }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.existingSecret }}
+                  key: database-url
+            {{- end }}
+            {{- if $cfg.policy }}
+            - name: OPA_URL
+              value: http://opa:8181
+            - name: AETHER_OPERATOR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.existingSecret }}
+                  key: operator-token
+            - name: AETHER_APPROVER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.existingSecret }}
+                  key: approver-token
+            {{- end }}
+            {{- if $cfg.fixture }}
+            - name: LAB_FIXTURE_URL
+              value: http://fixture:8083
+            {{- end }}
+            {{- if $cfg.lab }}
+            - name: FIXTURE_DIR
+              value: /tmp/aether-fixtures
+          volumeMounts:
+            - name: fixture-tmp
+              mountPath: /tmp
+            {{- end }}
+          {{- if $cfg.port }}
+          ports:
+            - containerPort: {{ $cfg.port }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ $cfg.port }}
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ $cfg.port }}
+            initialDelaySeconds: 15
+          {{- end }}
+      {{- if $cfg.lab }}
+      volumes:
+        - name: fixture-tmp
+          emptyDir:
+            sizeLimit: 32Mi
+      {{- end }}
+{{- if $cfg.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+spec:
+  selector:
+    app: {{ $name }}
+  ports:
+    - port: {{ $cfg.port }}
+      targetPort: {{ $cfg.port }}
+{{- end }}
+{{- end }}

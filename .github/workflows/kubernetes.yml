@@ -1,0 +1,30 @@
+name: Kubernetes lab
+on:
+  push:
+    paths: ["deploy/helm/**", "deploy/gitops/**", "deploy/policy/**", "services/event-fabric/**", "tests/kubernetes-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/kubernetes.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
+      AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: aether
+      - run: helm lint deploy/helm/aether
+      - run: cmp deploy/policy/workflow.rego deploy/helm/aether/files/workflow.rego
+      - run: docker build -t aether-event-fabric:local services/event-fabric
+      - run: kind load docker-image aether-event-fabric:local --name aether
+      - run: |
+          kubectl create namespace aether
+          kubectl -n aether create secret generic aether-local --from-literal=postgres-password=ci-only --from-literal=database-url='postgres://aether:ci-only@postgres:5432/aether?sslmode=disable' --from-literal=operator-token="$AETHER_OPERATOR_TOKEN" --from-literal=approver-token="$AETHER_APPROVER_TOKEN"
+          helm upgrade --install aether deploy/helm/aether -n aether
+      - run: bash tests/kubernetes-smoke.sh
+      - if: always()
+        run: kubectl -n aether get pods,jobs,events

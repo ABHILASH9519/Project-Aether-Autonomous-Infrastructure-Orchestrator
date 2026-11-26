@@ -1,0 +1,19 @@
+# Apply to an existing Argo CD installation only after importing the local image
+# and creating the aether-local Secret in the target namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aether-local
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator.git
+    targetRevision: main
+    path: deploy/helm/aether
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aether
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
