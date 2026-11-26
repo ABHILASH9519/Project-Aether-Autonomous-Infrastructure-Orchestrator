@@ -1,9 +1,9 @@
 name: Event fabric
 on:
   push:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", ".github/workflows/event-fabric.yml"]
   pull_request:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", ".github/workflows/event-fabric.yml"]
 permissions:
   contents: read
 jobs:
@@ -39,11 +39,14 @@ jobs:
       - run: go build -mod=mod ./cmd/...
   integration:
     runs-on: ubuntu-latest
+    env:
+      AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f deploy/compose/events.yaml up -d --build
+      - run: docker compose -f deploy/compose/events.yaml --profile workflow up -d --build
       - run: bash tests/event-fabric-smoke.sh
+      - run: bash tests/workflow-smoke.sh
       - if: always()
-        run: docker compose -f deploy/compose/events.yaml logs
+        run: docker compose -f deploy/compose/events.yaml --profile workflow logs
       - if: always()
-        run: docker compose -f deploy/compose/events.yaml down -v
+        run: docker compose -f deploy/compose/events.yaml --profile workflow down -v
