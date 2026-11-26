@@ -25,3 +25,5 @@ The workflow process authenticates two distinct local bearer credentials. Only o
 This is role separation, not individual identity or proof that two different humans participated. Shared secrets are local-only; TLS, identity-provider integration, policy revision audit and per-resource authorization remain open. The workflow cannot run real remediation. Unavailable, undefined or malformed decisions fail closed with 503; explicit policy denial returns 403.
 
 Set distinct random AETHER_OPERATOR_TOKEN and AETHER_APPROVER_TOKEN before enabling the workflow profile.
+
+The committed audit records include the server-derived actor role. Existing records migrate to `legacy`; no historical identity is inferred. Tests check rejected identical credentials, policy outage and persisted approval-role attribution.

@@ -46,12 +46,16 @@ func TestPersistenceAndRelay(t *testing.T) {
   {"approve",2,"approved"},
   {"simulate",3,"resolved"},
  }{
-  i,err:=s.Transition(ctx,e.CorrelationID,step.version,step.action)
+  role:="operator"
+  if step.action=="approve"{role="approver"}
+  i,err:=s.Transition(ctx,e.CorrelationID,step.version,step.action,role)
   if err!=nil || i.State!=step.state{t.Fatalf("transition %s: %v %v",step.action,i,err)}
  }
- if _,err=s.Transition(ctx,e.CorrelationID,0,"acknowledge");!errors.Is(err,ErrVersion){t.Fatalf("stale version: %v",err)}
+ if _,err=s.Transition(ctx,e.CorrelationID,0,"acknowledge","operator");!errors.Is(err,ErrVersion){t.Fatalf("stale version: %v",err)}
  var audit int
  if err=db.QueryRowContext(ctx,"SELECT count(*) FROM incident_audit WHERE correlation_id=$1",e.CorrelationID).Scan(&audit);err!=nil || audit!=6{t.Fatalf("audit=%d err=%v",audit,err)}
+ var approvals int
+ if err=db.QueryRowContext(ctx,"SELECT count(*) FROM incident_audit WHERE correlation_id=$1 AND actor_role='approver' AND action='approve'",e.CorrelationID).Scan(&approvals);err!=nil || approvals!=1{t.Fatalf("approvals=%d err=%v",approvals,err)}
  got,err=s.RelayOne(ctx,func(context.Context,OutboxRecord)error{return errors.New("unexpected second publish")})
  if err!=nil || got {t.Fatalf("empty relay=%v err=%v",got,err)}
 }

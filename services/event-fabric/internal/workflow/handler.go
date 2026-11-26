@@ -19,7 +19,7 @@ import (
 
 type Repository interface {
 	Incident(context.Context,string)(store.Incident,error)
-	Transition(context.Context,string,int64,string)(store.Incident,error)
+	Transition(context.Context,string,int64,string,string)(store.Incident,error)
 }
 
 type roleKey struct{}
@@ -52,7 +52,7 @@ func Handler(repo Repository, token, approver string, gate policy.Gate) (http.Ha
 		allowed,err:=gate.Allow(r.Context(),role,cmd.Action)
 		if err!=nil{http.Error(w,"policy unavailable",503);return}
 		if !allowed{http.Error(w,"policy denied",403);return}
-		i,err:=repo.Transition(r.Context(),r.PathValue("id"),*cmd.Version,cmd.Action)
+		i,err:=repo.Transition(r.Context(),r.PathValue("id"),*cmd.Version,cmd.Action,role)
 		respond(w,i,err)
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){

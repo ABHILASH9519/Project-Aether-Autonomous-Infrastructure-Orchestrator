@@ -8,6 +8,7 @@ import (
 )
 
 var ErrVersion = errors.New("incident version conflict")
+var ErrRole = errors.New("invalid actor role")
 
 type Incident struct {
 	ID string `json:"correlation_id"`
@@ -24,7 +25,8 @@ func (s Store) Incident(ctx context.Context,id string) (Incident,error) {
 
 // Transition serializes commands and rejects stale operator versions.
 // All simulation steps and audit entries commit together.
-func (s Store) Transition(ctx context.Context,id string,expected int64,action string) (Incident,error) {
+func (s Store) Transition(ctx context.Context,id string,expected int64,action,role string) (Incident,error) {
+	if role!="operator" && role!="approver" {return Incident{},ErrRole}
 	tx,err:=s.DB.BeginTx(ctx,nil)
 	if err!=nil{return Incident{},err}
 	defer tx.Rollback()
@@ -36,7 +38,7 @@ func (s Store) Transition(ctx context.Context,id string,expected int64,action st
 	if err!=nil{return Incident{},err}
 	for _,step:=range steps{
 		i.Version++
-		_,err=tx.ExecContext(ctx,"INSERT INTO incident_audit(correlation_id,version,action,previous_state,next_state) VALUES($1,$2,$3,$4,$5)",id,i.Version,step.Action,i.State,step.State)
+		_,err=tx.ExecContext(ctx,"INSERT INTO incident_audit(correlation_id,version,action,previous_state,next_state,actor_role) VALUES($1,$2,$3,$4,$5,$6)",id,i.Version,step.Action,i.State,step.State,role)
 		if err!=nil{return Incident{},err}
 		i.State=step.State
 	}

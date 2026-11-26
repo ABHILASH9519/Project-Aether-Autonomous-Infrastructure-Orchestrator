@@ -31,3 +31,5 @@ CREATE TABLE IF NOT EXISTS incident_audit (
  created_at timestamptz NOT NULL DEFAULT now(),
  PRIMARY KEY (correlation_id,version)
 );
+
+ALTER TABLE incident_audit ADD COLUMN IF NOT EXISTS actor_role text NOT NULL DEFAULT 'legacy' CHECK (actor_role IN ('operator','approver','legacy'));
