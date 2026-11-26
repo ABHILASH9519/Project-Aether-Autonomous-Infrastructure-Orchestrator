@@ -16,7 +16,7 @@ make automation
 make down
 ```
 
-See [local demo runbook](docs/runbooks/local-demo.md) for prerequisites, limitations and cleanup. Full-stack CI verification is in progress. Do not expose local ports publicly.
+See [local demo runbook](docs/runbooks/local-demo.md) for prerequisites, limitations and cleanup. See the verification matrix below for the last successful runs and remaining checks. Do not expose local ports publicly.
 
 ## Why this exists
 
@@ -130,11 +130,11 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 02 | Kafka event fabric | Prior end-to-end CI passed |
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
-| 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
-| 06 | Ansible and Puppet automation | Isolated convergence/drift lab and approved adapter committed; CI pending |
+| 05 | Workflow orchestration and policy engine | OPA and default lab execution verified in prior CI |
+| 06 | Ansible and Puppet automation | Standalone convergence/drift lab verified; approved adapter CI pending |
 | 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence export lab committed; CI pending |
-| 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
-| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard verified; HTTP-to-Kafka OTLP tracing committed |
+| 08 | Kubernetes, Helm and GitOps | Local Helm/kind smoke verified; Argo CD manifest not runtime tested |
+| 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics, dashboard and HTTP-to-Kafka tracing verified in prior CI |
 | 10 | Chaos engineering and security | OPA outage verified; Redis outage drill committed; broader chaos/security pending |
 
 ## Durable event processing
@@ -234,7 +234,7 @@ flowchart LR
  Worker -->|verified / retries exhausted| Audit[(Incident + audit)]
 ```
 
-The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). Inspect job evidence via authenticated `GET /api/v1/incidents/{id}/job`. Run `bash tests/execution-smoke.sh` with the workflow profile. New integration verification pending.
+The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). Inspect job evidence via authenticated `GET /api/v1/incidents/{id}/job`. Run `bash tests/execution-smoke.sh` with the workflow profile. Default fixture execution passed in run 45897898366; newer adapters require separate verification.
 
 ## Configuration management lab
 
@@ -246,7 +246,7 @@ A local Helm chart deploys the six event-fabric processes and their dependencies
 
 ## Distributed tracing
 
-Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). CI verification pending; outbox and execution spans are not yet connected.
+Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). HTTP-to-Kafka tracing passed in run 45897963370; outbox and execution spans are not yet connected.
 
 ## Local cloud evidence archive
 
@@ -255,3 +255,17 @@ The opt-in `cloud` Compose profile uses LocalStack S3 to archive verified remedi
 ## Failure drills
 
 The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.md) and [Redis fail-closed outage and recovery](docs/runbooks/redis-outage.md). These deliberately stop disposable local services; never run them against production.
+
+## Verification matrix
+
+| Scope | Verified commit / run |
+| --- | --- |
+| Default execution and retry tests | [ba06c97 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45897898366) |
+| HTTP-to-Kafka trace propagation | [29462c9 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45897963370) |
+| Local Kubernetes workflow and execution | [ba06c97 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45897898363) |
+| Standalone Ansible/Puppet drift reconciliation | [11750b4 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898062606) |
+| LocalStack evidence export | 1b5bb6a: CI not confirmed green |
+| Redis outage recovery and cloud smoke | 11750b4: CI not confirmed green |
+| Approved Ansible/Puppet adapter | ada3bfb: CI not confirmed green |
+
+These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, durable Kubernetes storage, live cloud execution, full trace coverage and Argo CD controller/image promotion are outside the verified scope.
