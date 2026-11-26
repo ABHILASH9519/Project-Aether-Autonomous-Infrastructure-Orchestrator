@@ -15,8 +15,12 @@ var schema string
 type Store struct { DB *sql.DB }
 
 func (s Store) Migrate(ctx context.Context) error {
-	_, err := s.DB.ExecContext(ctx, schema)
-	return err
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil { return err }
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(62391501)"); err != nil { return err }
+	if _, err = tx.ExecContext(ctx, schema); err != nil { return err }
+	return tx.Commit()
 }
 
 // Apply atomically records a unique event, updates the incident and queues an outbox record.
