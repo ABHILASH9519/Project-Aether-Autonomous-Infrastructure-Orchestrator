@@ -16,3 +16,7 @@ Query errors: `sum by (job) (rate(aether_http_requests_total{status_class="5xx"}
 Average request latency: `sum by(job)(rate(aether_http_request_duration_seconds_total[5m])) / clamp_min(sum by(job)(rate(aether_http_requests_total[5m])), 0.000001)`.
 
 These are process-local counters, not distributed traces or latency percentiles. Worker metrics, histogram buckets and OpenTelemetry remain future work.
+
+## Local dashboard
+
+Start the workflow and observability Compose profiles as shown in the README. Prometheus is available on loopback port 9090, Grafana on loopback port 3000. The dashboard is provisioned from version-controlled JSON. Anonymous viewer access is for local demonstrations only; do not publish the ports. Runtime verification of the monitoring profile is pending.
