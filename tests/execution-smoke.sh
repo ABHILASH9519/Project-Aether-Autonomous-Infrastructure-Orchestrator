@@ -2,7 +2,7 @@
 set -euo pipefail
 : "${AETHER_OPERATOR_TOKEN:?set operator token}"
 : "${AETHER_APPROVER_TOKEN:?set approver token}"
-id="execution-$(date +%s)-$$"
+id="${AETHER_EXECUTION_ID:-execution-$(date +%s)-$}"
 url="http://127.0.0.1:8082/api/v1/incidents/$id"
 auth="Authorization: Bearer $AETHER_OPERATOR_TOKEN"
 body=$(printf '{"event_id":"%s","event_type":"Infrastructure.Alert","schema_version":1,"occurred_at":"2026-01-01T00:00:00Z","source":"execution-smoke","correlation_id":"%s","payload":{}}' "$id" "$id")

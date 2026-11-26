@@ -119,7 +119,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
 | 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
 | 06 | Ansible and Puppet automation | Isolated convergence/drift lab committed; workflow adapter pending |
-| 07 | Floci / LocalStack cloud adapters | Planned |
+| 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence export lab committed; CI pending |
 | 08 | Kubernetes, Helm and GitOps | Local Helm chart, kind CI and Argo CD manifest committed; verification pending |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard verified; HTTP-to-Kafka OTLP tracing committed |
 | 10 | Chaos engineering and security | Planned |
@@ -234,3 +234,7 @@ A local Helm chart deploys the six event-fabric processes and their dependencies
 ## Distributed tracing
 
 Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). CI verification pending; outbox and execution spans are not yet connected.
+
+## Local cloud evidence archive
+
+The opt-in `cloud` Compose profile uses LocalStack S3 to archive verified remediation evidence. The smoke script exports authenticated job metadata and checks a byte-for-byte download. See [local cloud lab](docs/architecture/cloud-evidence.md). This is an explicit lab export, not continuous cloud archival; no live AWS account is required.
