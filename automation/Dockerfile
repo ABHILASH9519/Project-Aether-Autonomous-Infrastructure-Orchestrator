@@ -5,4 +5,7 @@ COPY ansible /lab/ansible
 COPY puppet /lab/puppet
 COPY verify.sh /lab/verify.sh
 ENV ANSIBLE_LOCAL_TEMP=/tmp/ansible-local ANSIBLE_REMOTE_TEMP=/tmp/ansible-remote
+RUN useradd --create-home --uid 10001 aether
+USER 10001:10001
+ENV HOME=/home/aether
 ENTRYPOINT ["/bin/bash","/lab/verify.sh"]

@@ -9,10 +9,10 @@ grep -Eq 'changed=0 .*failed=0' /tmp/ansible-second.log
 printf 'mode=degraded\n' >/tmp/aether-ansible/workload.conf
 ansible-playbook -i localhost, /lab/ansible/site.yml
 test "$(cat /tmp/aether-ansible/workload.conf)" = "$expected"
-puppet apply --detailed-exitcodes /lab/puppet/site.pp || test "$?" = 2
+puppet apply --confdir /tmp/puppet-conf --vardir /tmp/puppet-var --rundir /tmp/puppet-run --detailed-exitcodes /lab/puppet/site.pp || test "$?" = 2
 test "$(cat /tmp/aether-puppet/workload.conf)" = "$expected"
-puppet apply --detailed-exitcodes /lab/puppet/site.pp
+puppet apply --confdir /tmp/puppet-conf --vardir /tmp/puppet-var --rundir /tmp/puppet-run --detailed-exitcodes /lab/puppet/site.pp
 printf 'mode=degraded\n' >/tmp/aether-puppet/workload.conf
-puppet apply --detailed-exitcodes /lab/puppet/site.pp || test "$?" = 2
+puppet apply --confdir /tmp/puppet-conf --vardir /tmp/puppet-var --rundir /tmp/puppet-run --detailed-exitcodes /lab/puppet/site.pp || test "$?" = 2
 test "$(cat /tmp/aether-puppet/workload.conf)" = "$expected"
 echo "Ansible and Puppet converged, preserved idempotence and corrected drift"

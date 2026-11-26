@@ -38,7 +38,7 @@ LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id,&attempts)
 		if attempts>=3{status="failed"}
 	}
 	if _,err=tx.ExecContext(ctx,`UPDATE remediation_jobs SET status=$2,attempts=$3,evidence=$4,
-available_at=now()+($3 * interval '2 seconds'),updated_at=now() WHERE correlation_id=$1`,id,status,attempts,evidence);err!=nil{return false,err}
+available_at=now()+($3::integer * interval '2 seconds'),updated_at=now() WHERE correlation_id=$1`,id,status,attempts,evidence);err!=nil{return false,err}
 	if status!="pending" {
 		next:=[]string{"verifying","resolved"}
 		actions:=[]string{"lab_verified","lab_complete"}
