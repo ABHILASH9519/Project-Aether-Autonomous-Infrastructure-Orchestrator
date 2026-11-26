@@ -81,6 +81,19 @@ services:
         condition: service_healthy
       topics:
         condition: service_completed_successfully
+  workflow:
+    profiles: ["workflow"]
+    build:
+      context: ../../services/event-fabric
+    entrypoint: ["/workflow"]
+    environment:
+      DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
+      AETHER_OPERATOR_TOKEN: ${AETHER_OPERATOR_TOKEN:-}
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
 volumes:
   kafka-data:
   incident-data:
