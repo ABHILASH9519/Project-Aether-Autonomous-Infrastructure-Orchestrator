@@ -1,4 +1,11 @@
 services:
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
   postgres:
     image: postgres:16-alpine
     environment:
@@ -60,10 +67,13 @@ services:
     build:
       context: ../../services/event-fabric
     environment:
+      REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:29092
     ports:
       - "127.0.0.1:8081:8081"
     depends_on:
+      redis:
+        condition: service_healthy
       topics:
         condition: service_completed_successfully
   consumer:
