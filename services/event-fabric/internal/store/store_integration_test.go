@@ -39,6 +39,19 @@ func TestPersistenceAndRelay(t *testing.T) {
   return nil
  })
  if err!=nil || !got {t.Fatalf("relay=%v err=%v",got,err)}
+ // State changes use a separate monotonic version.
+ for _,step:=range []struct{action string; version int64; state string}{
+  {"acknowledge",0,"acknowledged"},
+  {"request_approval",1,"awaiting_approval"},
+  {"approve",2,"approved"},
+  {"simulate",3,"resolved"},
+ }{
+  i,err:=s.Transition(ctx,e.CorrelationID,step.version,step.action)
+  if err!=nil || i.State!=step.state{t.Fatalf("transition %s: %v %v",step.action,i,err)}
+ }
+ if _,err=s.Transition(ctx,e.CorrelationID,0,"acknowledge");!errors.Is(err,ErrVersion){t.Fatalf("stale version: %v",err)}
+ var audit int
+ if err=db.QueryRowContext(ctx,"SELECT count(*) FROM incident_audit WHERE correlation_id=$1",e.CorrelationID).Scan(&audit);err!=nil || audit!=6{t.Fatalf("audit=%d err=%v",audit,err)}
  got,err=s.RelayOne(ctx,func(context.Context,OutboxRecord)error{return errors.New("unexpected second publish")})
  if err!=nil || got {t.Fatalf("empty relay=%v err=%v",got,err)}
 }
