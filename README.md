@@ -1,7 +1,7 @@
 # AETHER
 ### Autonomous Event-driven Telemetry, Execution & Resilience
 
-> **Status: Phase 0 — architecture and initial implementation.** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
+> **Status: Phase 3 — durable event processing (verification pending).** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
 
@@ -85,7 +85,7 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 
 ## Event fabric preview (Phase 2)
 
-The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on the event-fabric development branch. Runtime verification is pending. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
+The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on main. Runtime verification is pending. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
 
 ### Event ingestion and processing flow
 
@@ -115,7 +115,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | --- | --- | --- |
 | 01 | Repository, architecture and control API | Committed |
 | 02 | Kafka event fabric | Committed · testing pending |
-| 03 | PostgreSQL incident management | Next |
+| 03 | PostgreSQL incident management | Inbox, projection and relay committed; testing pending |
 | 04 | Redis caching and coordination | Planned |
 | 05 | Workflow orchestration and policy engine | Planned |
 | 06 | Ansible and Puppet automation | Planned |
@@ -123,3 +123,21 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 08 | Kubernetes, Helm and GitOps | Planned |
 | 09 | Prometheus, Grafana and OpenTelemetry | Planned |
 | 10 | Chaos engineering and security | Planned |
+
+## Durable event processing
+
+```mermaid
+sequenceDiagram
+ participant C as Incident consumer
+ participant P as PostgreSQL
+ participant R as Outbox relay
+ participant K as Kafka
+ C->>P: Atomic inbox + incident + outbox
+ P-->>C: Commit
+ R->>P: Claim pending row (SKIP LOCKED)
+ R->>K: Publish observed event
+ K-->>R: Acknowledge
+ R->>P: Mark published and commit
+```
+
+**Guarantee:** at-least-once delivery with transactional inbox deduplication. No end-to-end exactly-once claim. See [failure model](docs/architecture/outbox-relay.md). Runtime verification is pending.
