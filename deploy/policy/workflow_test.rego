@@ -21,3 +21,13 @@ test_live_mode_denied if {
 test_unknown_action_denied if {
 	not allow with input as {"mode":"simulation","role":"operator","action":"shell"}
 }
+
+test_operator_can_enqueue_lab if {
+	allow with input as {"mode":"simulation","role":"operator","action":"execute_lab"}
+}
+test_approver_cannot_enqueue_lab if {
+	not allow with input as {"mode":"simulation","role":"approver","action":"execute_lab"}
+}
+test_live_lab_denied if {
+	not allow with input as {"mode":"live","role":"operator","action":"execute_lab"}
+}

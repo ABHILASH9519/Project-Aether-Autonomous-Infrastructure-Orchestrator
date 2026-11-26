@@ -2,6 +2,8 @@ package lab
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"errors"
 	"io"
 	"net/http"
@@ -24,7 +26,7 @@ func NewAdapter(raw string)(*Adapter,error){
 // Repair writes the fixed desired content through the fixture API and
 // independently reads it back. The target base URL is deployment-owned.
 func (a *Adapter) Repair(ctx context.Context,id string)error{
-	endpoint:=a.base+"/v1/fixtures/"+url.PathEscape(id)
+	endpoint:=a.base+"/v1/fixtures/"+fmt.Sprintf("%x",sha256.Sum256([]byte(id)))
 	req,err:=http.NewRequestWithContext(ctx,http.MethodPut,endpoint,nil)
 	if err!=nil{return err}
 	resp,err:=a.client.Do(req)
