@@ -1,14 +1,30 @@
 name: Event fabric
 on:
   push:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", ".github/workflows/event-fabric.yml"]
   pull_request:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", ".github/workflows/event-fabric.yml"]
 permissions:
   contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aether
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: aether_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aether -d aether_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      AETHER_TEST_DATABASE_URL: postgres://aether:ci-only@localhost:5432/aether_test?sslmode=disable
     defaults:
       run:
         working-directory: services/event-fabric
