@@ -207,4 +207,4 @@ flowchart LR
  OPA -->|Deny / error| Rejected[403 / 503]
 ```
 
-Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. Policy integration CI pending.
+Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. Policy integration CI pending. Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
