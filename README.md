@@ -5,6 +5,19 @@
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
 
+## Quick start (local lab)
+
+```bash
+export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
+export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
+make up
+make smoke
+make automation
+make down
+```
+
+See [local demo runbook](docs/runbooks/local-demo.md) for prerequisites, limitations and cleanup. Full-stack CI verification is in progress. Do not expose local ports publicly.
+
 ## Why this exists
 
 Modern infrastructure produces alerts, logs and events, but humans often still have to correlate them, select a runbook, execute it and verify the result. AETHER aims to make this process reproducible: **observe → normalize → correlate → decide → approve → execute → verify → audit**.
