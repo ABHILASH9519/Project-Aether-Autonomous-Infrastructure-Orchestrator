@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+<title id="title">AETHER event-driven infrastructure architecture</title>
+<desc id="desc">Signals enter Kafka, are correlated into incidents, checked against policies and approvals, executed in a sandbox or approved infrastructure adapter, and verified, with a separate audit stream.</desc>
+<defs>
+  <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101e34"/><stop offset="1" stop-color="#09111f"/></linearGradient>
+  <linearGradient id="blue" x2="0" x1="1"><stop stop-color="#17a8d8"/><stop offset="1" stop-color="#5265ed"/></linearGradient>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#9fb6ce" stroke-width="1.5"/></marker>
+  <style>
+    .title{font:700 32px Arial,sans-serif;fill:#f5f9ff}
+    .subtitle{font:16px Arial,sans-serif;fill:#9db2c9}
+    .label{font:700 18px Arial,sans-serif;fill:#eef4ff}
+    .detail{font:13px Arial,sans-serif;fill:#adbfce}
+    .small{font:700 12px Arial,sans-serif;letter-spacing:1px;fill:#70d5eb}
+    .node{fill:#1c3048;stroke:#426180;stroke-width:1.5}
+    .edge{stroke:#9fb6ce;stroke-width:2;fill:none;marker-end:url(#arrow)}
+  </style>
+</defs>
+<rect width="1200" height="540" rx="18" fill="url(#bg)"/>
+<rect x="32" y="24" width="6" height="50" rx="3" fill="url(#blue)"/>
+<text x="54" y="52" class="title">AETHER</text>
+<text x="54" y="76" class="subtitle">Autonomous Event-driven Telemetry, Execution &amp; Resilience</text>
+<text x="56" y="125" class="small">EVENT-TO-ACTION PIPELINE · TARGET ARCHITECTURE</text>
+<g>
+<rect class="node" x="28" y="150" width="174" height="116" rx="13"/>
+<text class="label" x="46" y="188">Telemetry</text><text class="detail" x="46" y="213">Metrics · Logs</text><text class="detail" x="46" y="232">External signals</text>
+<rect class="node" x="228" y="150" width="174" height="116" rx="13"/>
+<text class="label" x="246" y="188">Event Bus</text><text class="detail" x="246" y="213">Kafka · Contracts</text><text class="detail" x="246" y="232">Retries · Replay</text>
+<rect class="node" x="428" y="150" width="174" height="116" rx="13"/>
+<text class="label" x="446" y="188">Correlation</text><text class="detail" x="446" y="213">Incident evidence</text><text class="detail" x="446" y="232">Root-cause hints</text>
+<rect class="node" x="628" y="150" width="174" height="116" rx="13"/>
+<text class="label" x="646" y="188">Policy Gate</text><text class="detail" x="646" y="213">OPA · Approval</text><text class="detail" x="646" y="232">Scoped execution</text>
+<rect class="node" x="828" y="150" width="174" height="116" rx="13"/>
+<text class="label" x="846" y="188">Execution</text><text class="detail" x="846" y="213">Dry-run by default</text><text class="detail" x="846" y="232">K8s · Ansible</text>
+<rect class="node" x="1024" y="150" width="150" height="116" rx="13"/>
+<text class="label" x="1042" y="188">Verify</text><text class="detail" x="1042" y="213">Recovery tests</text><text class="detail" x="1042" y="232">Feedback</text>
+<path class="edge" d="M202 208 H224"/><path class="edge" d="M402 208 H424"/><path class="edge" d="M602 208 H624"/><path class="edge" d="M802 208 H824"/><path class="edge" d="M1002 208 H1020"/>
+</g>
+<rect x="36" y="324" width="531" height="138" rx="14" fill="#142a3c" stroke="#28566a"/>
+<text x="58" y="360" class="small">CONTROL &amp; STATE</text>
+<text x="58" y="391" class="label">Go Control API + PostgreSQL</text>
+<text x="58" y="417" class="detail">Workflow state · Approvals · Inventory · Deduplication</text>
+<text x="58" y="438" class="detail">Explicit operator control and auditability</text>
+<rect x="591" y="324" width="572" height="138" rx="14" fill="#142a3c" stroke="#28566a"/>
+<text x="613" y="360" class="small">OBSERVABILITY &amp; EVIDENCE</text>
+<text x="613" y="391" class="label">OpenTelemetry + Prometheus + Audit</text>
+<text x="613" y="417" class="detail">Trace every event, decision and execution attempt</text>
+<text x="613" y="438" class="detail">Verify outcomes before closing incidents</text>
+<path d="M313 266 V320" stroke="#5aa5bd" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M922 266 V298 H877 V320" stroke="#5aa5bd" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="40" y="512" class="detail">Design visualization · Components beyond the Control API are planned, not yet implemented.</text>
+</svg>

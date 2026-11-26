@@ -1,0 +1,11 @@
+services:
+  control-api:
+    build:
+      context: ../../services/control-api
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      PORT: "8080"
+    # Distroless image does not contain a shell or curl.
+    # Probe http://localhost:8080/healthz from the host or orchestrator.
+    restart: unless-stopped
