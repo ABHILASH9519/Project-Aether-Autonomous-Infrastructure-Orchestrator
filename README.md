@@ -1,7 +1,7 @@
 # AETHER
 ### Autonomous Event-driven Telemetry, Execution & Resilience
 
-> **Status: Phase 3 — durable event processing (verification pending).** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
+> **Status: Phase 4/5 prototype — durable events and approval simulation (integration verification pending).** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
 
@@ -98,7 +98,7 @@ flowchart TD
     E --> F[Incident Consumer - Go]
     F --> G[Structured Incident Output]
     F -->|Malformed Event| H[Dead Letter Topic]
-    G -. Future phase .-> I[(PostgreSQL)]
+    G --> I[(PostgreSQL)]
 ```
 
 ### Kafka architecture
@@ -115,9 +115,9 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | --- | --- | --- |
 | 01 | Repository, architecture and control API | Committed |
 | 02 | Kafka event fabric | Committed · testing pending |
-| 03 | PostgreSQL incident management | Inbox, projection and relay committed; testing pending |
+| 03 | PostgreSQL incident management | Persistence, versioned transitions and audit committed; integration testing pending |
 | 04 | Redis caching and coordination | Planned |
-| 05 | Workflow orchestration and policy engine | Planned |
+| 05 | Workflow orchestration and policy engine | Local approval simulation committed; OPA and real adapters planned |
 | 06 | Ansible and Puppet automation | Planned |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Planned |
@@ -141,3 +141,28 @@ sequenceDiagram
 ```
 
 **Guarantee:** at-least-once delivery with transactional inbox deduplication. No end-to-end exactly-once claim. See [failure model](docs/architecture/outbox-relay.md). Runtime verification is pending.
+
+## Approval-gated workflow (local simulation)
+
+```mermaid
+stateDiagram-v2
+ [*] --> open
+ open --> acknowledged: acknowledge
+ acknowledged --> awaiting_approval: request_approval
+ awaiting_approval --> approved: approve
+ awaiting_approval --> rejected: reject
+ approved --> executing: simulate
+ executing --> verifying: simulated check
+ verifying --> resolved: simulated completion
+```
+
+The opt-in workflow API uses a bearer token, version checks and atomic audit inserts. Simulation does not perform any infrastructure changes or prove real recovery. See [workflow architecture and limitations](docs/architecture/workflow.md).
+
+```bash
+export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
+docker compose -f deploy/compose/events.yaml --profile workflow up -d --build
+bash tests/event-fabric-smoke.sh
+bash tests/workflow-smoke.sh
+```
+
+**Verification:** pure lifecycle unit tests passed locally on reproduced sources. Full Kafka/PostgreSQL/Docker integration remains unverified. CI is configured to exercise the database and workflow. No production deployment or real remediation is supported yet.
