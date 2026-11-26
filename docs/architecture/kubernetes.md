@@ -4,7 +4,7 @@ The Helm chart deploys the six event-fabric processes, Kafka, Redis, PostgreSQL,
 
 ```mermaid
 flowchart TB
-  Git[Git main] --> Argo[Optional Argo CD Application]
+  Git[Git main] --> Argo[Argo CD Application]
   Git --> Helm[Helm chart]
   Argo --> K[Local Kubernetes namespace]
   Helm --> K
@@ -29,4 +29,4 @@ helm upgrade --install aether deploy/helm/aether -n aether
 bash tests/kubernetes-smoke.sh
 ```
 
-The chart is a disposable local lab: Kafka and PostgreSQL use emptyDir, so pod replacement loses state; no HA, PVCs, network-policy enforcement or TLS. Topic creation is a one-time Job, requiring rerun if the broker's data is lost. The optional Argo CD Application is a manual-sync manifest, not an installed controller or automated image promotion pipeline. The image is locally loaded with pullPolicy Never. GitOps requires preloading a matching image and creating the secret before sync. Kubernetes CI is pending.
+The chart is a disposable local lab: Kafka and PostgreSQL use emptyDir, so pod replacement loses state; no HA, PVCs, network-policy enforcement or TLS. Topic creation is a one-time Job, requiring rerun if the broker's data is lost. The optional Argo CD Application enables automatic sync and self-healing in the dedicated local namespace. A separate workflow installs the controller and tests reconciliation; see [GitOps guide](gitops.md). The image is locally loaded with pullPolicy Never. GitOps requires preloading a matching image and creating the secret before sync. Direct Helm deployment and execution passed in [run 45898190027](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190027). New controller CI is pending.

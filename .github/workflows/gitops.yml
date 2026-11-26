@@ -1,0 +1,49 @@
+name: Argo CD GitOps lab
+on:
+  push:
+    branches: [main]
+    paths: ["deploy/gitops/**", "deploy/helm/**", "deploy/policy/**", "services/event-fabric/**", "tests/gitops-smoke.sh", "tests/kubernetes-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/gitops.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sync-and-self-heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
+      AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only
+      AETHER_GIT_REVISION: ${{ github.sha }}
+      ARGOCD_VERSION: v3.6.3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: aether
+      - name: Build and preload application image
+        run: |
+          helm lint deploy/helm/aether
+          cmp deploy/policy/workflow.rego deploy/helm/aether/files/workflow.rego
+          docker build -t aether-event-fabric:local services/event-fabric
+          kind load docker-image aether-event-fabric:local --name aether
+      - name: Install pinned Argo CD controller
+        run: |
+          kubectl create namespace argocd
+          kubectl apply -n argocd --server-side --force-conflicts -f "https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/install.yaml"
+          kubectl wait --for=condition=Established crd/applications.argoproj.io crd/appprojects.argoproj.io --timeout=120s
+          kubectl -n argocd rollout status deployment/argocd-repo-server --timeout=300s
+          kubectl -n argocd rollout status statefulset/argocd-application-controller --timeout=300s
+      - name: Bootstrap namespace and GitOps application
+        run: |
+          kubectl create namespace aether
+          kubectl -n aether create secret generic aether-local --from-literal=postgres-password=ci-only --from-literal=database-url='postgres://aether:ci-only@postgres:5432/aether?sslmode=disable' --from-literal=operator-token="$AETHER_OPERATOR_TOKEN" --from-literal=approver-token="$AETHER_APPROVER_TOKEN"
+          kubectl apply -f deploy/gitops/project.yaml
+          kubectl patch --local -f deploy/gitops/application.yaml --type=merge -p "{\"spec\":{\"source\":{\"targetRevision\":\"$AETHER_GIT_REVISION\"}}}" -o yaml | kubectl apply -f -
+      - name: Verify Git sync, approved workflow and drift reconciliation
+        run: bash tests/gitops-smoke.sh
+      - if: always()
+        name: Diagnostics
+        run: |
+          kubectl -n argocd get applications,pods,events || true
+          kubectl -n argocd get application aether-local -o yaml || true
+          kubectl -n aether get deployments,pods,jobs,events || true

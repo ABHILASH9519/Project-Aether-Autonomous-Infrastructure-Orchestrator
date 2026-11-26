@@ -131,11 +131,11 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
 | 05 | Workflow orchestration and policy engine | OPA and default lab execution verified in prior CI |
-| 06 | Ansible and Puppet automation | Standalone convergence/drift lab verified; approved adapter CI pending |
-| 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence export lab committed; CI pending |
-| 08 | Kubernetes, Helm and GitOps | Local Helm/kind smoke verified; Argo CD manifest not runtime tested |
+| 06 | Ansible and Puppet automation | Standalone and approved Ansible/Puppet adapter CI passed |
+| 07 | Floci / LocalStack cloud adapters | LocalStack S3 evidence round-trip CI passed |
+| 08 | Kubernetes, Helm and GitOps | Helm/kind verified; Argo CD sync and self-heal CI added |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics, dashboard and HTTP-to-Kafka tracing verified in prior CI |
-| 10 | Chaos engineering and security | OPA outage verified; Redis outage drill committed; broader chaos/security pending |
+| 10 | Chaos engineering and security | OPA and Redis outage drills CI passed; broader chaos/security pending |
 
 ## Durable event processing
 
@@ -242,7 +242,7 @@ Ansible and Puppet enforce a version-controlled desired configuration, demonstra
 
 ## Kubernetes deployment
 
-A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An optional manual-sync Argo CD Application is included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). This chart uses disposable storage and locally loaded images, not production persistence or image promotion.
+A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An Argo CD Application with automatic sync and self-healing, a scoped AppProject, and a dedicated GitOps integration workflow are included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). This chart uses disposable storage and locally loaded images, not production persistence or image promotion.
 
 ## Distributed tracing
 
@@ -264,8 +264,14 @@ The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.m
 | HTTP-to-Kafka trace propagation | [29462c9 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45897963370) |
 | Local Kubernetes workflow and execution | [ba06c97 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45897898363) |
 | Standalone Ansible/Puppet drift reconciliation | [11750b4 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898062606) |
-| LocalStack evidence export | 1b5bb6a: CI not confirmed green |
-| Redis outage recovery and cloud smoke | 11750b4: CI not confirmed green |
-| Approved Ansible/Puppet adapter | ada3bfb: CI not confirmed green |
+| LocalStack evidence export | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136) |
+| Redis outage recovery and cloud smoke | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136) |
+| Approved Ansible/Puppet adapter | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190166) |
 
-These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, durable Kubernetes storage, live cloud execution, full trace coverage and Argo CD controller/image promotion are outside the verified scope.
+| Argo CD sync and replica self-healing | New dedicated GitOps CI; verification pending |
+
+These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, durable Kubernetes storage, live cloud execution, full trace coverage and registry-based image promotion remain outside the verified scope.
+
+## GitOps reconciliation
+
+The dedicated Argo CD workflow installs a pinned controller, deploys the exact commit through Git (not Helm install), runs approval and execution smoke tests, and checks recovery from replica drift. See [GitOps architecture and local setup](docs/architecture/gitops.md). Automated pruning is disabled. The controller integration result is pending.

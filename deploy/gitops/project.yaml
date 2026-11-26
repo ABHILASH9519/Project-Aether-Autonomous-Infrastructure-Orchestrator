@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: aether-lab
+  namespace: argocd
+spec:
+  description: Local AETHER namespace only
+  sourceRepos:
+    - https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: aether
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - {group: "", kind: Service}
+    - {group: "", kind: ConfigMap}
+    - {group: apps, kind: Deployment}
+    - {group: batch, kind: Job}

@@ -20,4 +20,4 @@ bash tests/execution-smoke.sh
 bash tests/cloud-evidence-smoke.sh
 ```
 
-The export is explicit, not an automatically delivered archive. LocalStack is ephemeral in this profile; object lifecycle, immutable retention, encryption and production IAM are not implemented. The script uses synthetic incident data and a fixed local bucket. CI verification pending.
+The export is explicit, not an automatically delivered archive. LocalStack is ephemeral in this profile; object lifecycle, immutable retention, encryption and production IAM are not implemented. The script uses synthetic incident data and a fixed local bucket. The upload/download round trip passed in [run 45898190136](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136).
