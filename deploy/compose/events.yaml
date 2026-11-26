@@ -42,7 +42,7 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
-        for topic in aether.events.v1 aether.events.dlq.v1; do
+        for topic in aether.events.v1 aether.events.dlq.v1 aether.incidents.observed.v1; do
           /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic "$$topic" --partitions 3 --replication-factor 1
         done
   ingest:
@@ -59,6 +59,19 @@ services:
     build:
       context: ../../services/event-fabric
     entrypoint: ["/consumer"]
+    environment:
+      DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
+      KAFKA_BROKERS: kafka:29092
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+      topics:
+        condition: service_completed_successfully
+  relay:
+    build:
+      context: ../../services/event-fabric
+    entrypoint: ["/relay"]
     environment:
       DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       KAFKA_BROKERS: kafka:29092
