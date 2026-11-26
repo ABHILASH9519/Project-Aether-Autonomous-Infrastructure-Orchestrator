@@ -1,6 +1,6 @@
 # Argo CD deployment and drift recovery
 
-Argo CD is installed in a disposable kind cluster by the GitOps CI workflow using the pinned upstream v3.6.3 installation manifest. The AppProject limits the source repository, destination namespace, and permitted resource kinds. The application controller renders the Helm chart from Git and syncs it into the pre-created namespace. Automated self-healing is enabled; pruning is intentionally disabled.
+Argo CD is installed in a disposable kind cluster by the GitOps CI workflow using the pinned upstream v3.6.3 installation manifest, kind v0.30.0 and its digest-pinned Kubernetes v1.34.0 image (within the upstream tested Kubernetes range). The AppProject limits the source repository, destination namespace, and permitted resource kinds. The application controller renders the Helm chart from Git and syncs it into the pre-created namespace. Automated self-healing is enabled; pruning is intentionally disabled.
 
 ```mermaid
 sequenceDiagram
@@ -20,7 +20,7 @@ CI pins the Application source to the exact checked-out commit and preloads the 
 
 ## Local use
 
-In a fresh, disposable kind cluster named aether, build and preload the image and create the target namespace and Secret using the [Kubernetes guide](kubernetes.md), **without** running Helm install. Install Argo CD and apply the project and application:
+In a fresh, disposable kind cluster named aether using Kubernetes 1.34 or another upstream-tested version, build and preload the image and create the target namespace and Secret using the [Kubernetes guide](kubernetes.md), **without** running Helm install. Install Argo CD and apply the project and application:
 
 ```bash
 kubectl create namespace argocd

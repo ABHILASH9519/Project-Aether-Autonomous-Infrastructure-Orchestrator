@@ -20,6 +20,8 @@ jobs:
       - uses: helm/kind-action@v1.12.0
         with:
           cluster_name: aether
+          version: v0.30.0
+          node_image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
       - name: Build and preload application image
         run: |
           helm lint deploy/helm/aether
