@@ -3,6 +3,9 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
+	"aether/event-fabric/internal/store"
+	_ "github.com/lib/pq"
 	"encoding/json"
 	"io"
 	"log"
@@ -22,7 +25,14 @@ func main(){
 	b:=os.Getenv("KAFKA_BROKERS")
 	if b==""{b="localhost:9092"}
 	brokers:=strings.Split(b,",")
-	r:=kafka.NewReader(kafka.ReaderConfig{Brokers:brokers,GroupID:"aether-incident-preview-v1",Topic:"aether.events.v1",StartOffset:kafka.FirstOffset})
+	dsn:=os.Getenv("DATABASE_URL")
+	if dsn==""{log.Fatal("DATABASE_URL required")}
+	db,err:=sql.Open("postgres",dsn)
+	if err!=nil{log.Fatal(err)}
+	defer db.Close()
+	st:=store.Store{DB:db}
+	if err=st.Migrate(ctx);err!=nil{log.Fatal(err)}
+	r:=kafka.NewReader(kafka.ReaderConfig{Brokers:brokers,GroupID:"aether-incident-persistent-v1",Topic:"aether.events.v1",StartOffset:kafka.FirstOffset})
 	defer r.Close()
 	dlq:=&kafka.Writer{Addr:kafka.TCP(brokers...),Topic:"aether.events.dlq.v1",RequiredAcks:kafka.RequireAll,WriteTimeout:5*time.Second}
 	defer dlq.Close()
@@ -34,10 +44,12 @@ func main(){
 		d.DisallowUnknownFields()
 		if d.Decode(&e)!=nil || e.Validate()!=nil || d.Decode(new(any))!=io.EOF{
 			// Stop on failed DLQ publication; never commit past a failed record.
-			if err=dlq.WriteMessages(ctx,kafka.Message{Key:m.Key,Value:m.Value});err!=nil{log.Printf("DLQ failed: %v",err);return}
+			if err=dlq.WriteMessages(ctx,kafka.Message{Key:m.Key,Value:m.Value});err!=nil{log.Fatalf("DLQ failed: %v",err)}
 		}else{
-			log.Printf("incident preview event_id=%q correlation_id=%q type=%q",e.ID,e.CorrelationID,e.Type)
+			applied,err:=st.Apply(ctx,e)
+			if err!=nil{log.Fatalf("database apply failed: %v",err)}
+			log.Printf("incident event_id=%q correlation_id=%q type=%q applied=%t",e.ID,e.CorrelationID,e.Type,applied)
 		}
-		if err=r.CommitMessages(ctx,m);err!=nil{log.Printf("commit failed: %v",err);return}
+		if err=r.CommitMessages(ctx,m);err!=nil{log.Fatalf("commit failed: %v",err)}
 	}
 }
