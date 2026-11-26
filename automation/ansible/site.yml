@@ -1,0 +1,16 @@
+---
+- name: Reconcile AETHER synthetic workload configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Create isolated configuration directory
+      ansible.builtin.file:
+        path: /tmp/aether-ansible
+        state: directory
+        mode: '0700'
+    - name: Enforce desired workload configuration
+      ansible.builtin.copy:
+        dest: /tmp/aether-ansible/workload.conf
+        content: "mode=healthy\nreplicas=1\n"
+        mode: '0600'

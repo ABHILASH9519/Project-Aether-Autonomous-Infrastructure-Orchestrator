@@ -118,7 +118,7 @@ Events are routed using their correlation IDs as partition keys. Malformed broke
 | 03 | PostgreSQL incident management | Prior PostgreSQL and workflow integration CI passed |
 | 04 | Redis caching and coordination | Shared admission budget; prior integration CI passed |
 | 05 | Workflow orchestration and policy engine | OPA verified; durable local remediation worker committed; new CI pending |
-| 06 | Ansible and Puppet automation | Planned |
+| 06 | Ansible and Puppet automation | Isolated convergence/drift lab committed; workflow adapter pending |
 | 07 | Floci / LocalStack cloud adapters | Planned |
 | 08 | Kubernetes, Helm and GitOps | Planned |
 | 09 | Prometheus, Grafana and OpenTelemetry | HTTP metrics and dashboard; prior integration CI passed; tracing pending |
@@ -166,7 +166,7 @@ bash tests/event-fabric-smoke.sh
 bash tests/workflow-smoke.sh
 ```
 
-**Verification:** [GitHub Actions run 45892838506](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45892838506) passed the prior Kafka/PostgreSQL/Docker workflow baseline. [Run 45893095275](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45893095275) also passed Redis and monitoring checks. New OPA changes require verification. No production deployment or real remediation is supported yet.
+**Verification:** [GitHub Actions run 45892838506](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45892838506) passed the prior Kafka/PostgreSQL/Docker workflow baseline. [Run 45893095275](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45893095275) also passed Redis and monitoring checks. OPA authorization and recovery also passed in run 45894817663. No production deployment or real remediation is supported yet.
 
 ## Admission control and observability
 
@@ -207,7 +207,7 @@ flowchart LR
  OPA -->|Deny / error| Rejected[403 / 503]
 ```
 
-Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. Policy integration CI pending. Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
+Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. [Policy and outage integration CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45894817663). Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
 
 ## Durable lab execution
 
@@ -222,3 +222,7 @@ flowchart LR
 ```
 
 The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). Inspect job evidence via authenticated `GET /api/v1/incidents/{id}/job`. Run `bash tests/execution-smoke.sh` with the workflow profile. New integration verification pending.
+
+## Configuration management lab
+
+Ansible and Puppet enforce a version-controlled desired configuration, demonstrate idempotence, and correct injected drift inside a disposable container. See [architecture and run instructions](docs/architecture/configuration-management.md). This standalone lab is not yet connected to the approved execution worker.
