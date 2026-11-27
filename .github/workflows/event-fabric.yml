@@ -4,11 +4,13 @@ on:
     paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
   pull_request:
     paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       redis:
         image: redis:7.4-alpine
@@ -50,7 +52,9 @@ jobs:
       - run: go vet -mod=readonly ./...
       - run: go build -mod=readonly ./cmd/...
   integration:
+    needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
       AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
       AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only

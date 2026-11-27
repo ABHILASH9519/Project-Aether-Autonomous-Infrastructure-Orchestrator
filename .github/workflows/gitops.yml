@@ -71,6 +71,17 @@ jobs:
           kubectl -n argocd get applications,pods,events || true
           kubectl -n argocd get application aether-local -o yaml || true
           kubectl -n aether get deployments,pods,jobs,events || true
+      - if: failure()
+        name: Collect controller and registry failure evidence
+        run: |
+          kubectl -n argocd logs statefulset/argocd-application-controller --tail=150 || true
+          kubectl -n argocd logs deployment/argocd-repo-server --tail=150 || true
+          kubectl -n aether describe pods || true
+          docker logs --tail 100 aether-lab-registry || true
+          for node in $(kind get nodes --name aether); do
+            docker exec "$node" crictl images || true
+            docker exec "$node" cat /etc/containerd/certs.d/localhost:5001/hosts.toml || true
+          done
       - if: always()
         name: Remove disposable registry
         run: docker rm -f aether-lab-registry || true
