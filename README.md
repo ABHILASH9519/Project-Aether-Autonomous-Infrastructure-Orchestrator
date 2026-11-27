@@ -242,7 +242,7 @@ Ansible and Puppet enforce a version-controlled desired configuration, demonstra
 
 ## Kubernetes deployment
 
-A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An Argo CD Application with automatic sync and self-healing, a scoped AppProject, and a dedicated GitOps integration workflow are included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). The chart now uses separate PostgreSQL and Kafka persistent volume claims by default; pod replacement recovery testing is configured. Images remain locally loaded, not registry-promoted.
+A local Helm chart deploys the six event-fabric processes and their dependencies; a kind CI job checks the approved workflow and lab repair. An Argo CD Application with automatic sync and self-healing, a scoped AppProject, and a dedicated GitOps integration workflow are included. See [Kubernetes architecture and setup](docs/architecture/kubernetes.md). The chart now uses separate PostgreSQL and Kafka persistent volume claims by default; pod replacement recovery testing passed in CI. Images remain locally loaded, not registry-promoted.
 
 ## Distributed tracing
 
@@ -268,8 +268,13 @@ The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.m
 | Redis outage recovery and cloud smoke | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136) |
 | Approved Ansible/Puppet adapter | [ada3bfb / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190166) |
 | Argo CD sync and replica self-healing | [34e1f7d / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45901613370) |
+| Kubernetes PVC pod replacement | [8da6c30 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064413429) |
+| PostgreSQL logical restore | [7456210 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064464894) |
+| Versioned migrations | [9b66efc / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064513027) |
+| Dependency readiness and outage drills | [49dbcc6 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064602921) |
+| GitOps with PVCs | [ba63e6a / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064370803) |
 
-These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, durable Kubernetes storage, live cloud execution, full trace coverage and registry-based image promotion remain outside the verified scope.
+These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, node-loss recovery, live cloud execution, full trace coverage and registry-based image promotion remain outside the verified scope.
 
 ## GitOps reconciliation
 
@@ -279,19 +284,19 @@ The dedicated Argo CD workflow installs a pinned controller, deploys the exact c
 
 The Helm chart now provisions PostgreSQL and Kafka PVCs by default. Use a fresh namespace when switching from the previous emptyDir setup; no automatic data migration is provided. Claims are retained on Helm uninstall and excluded from Argo CD prune/delete. Deleting a namespace can still destroy data. Single-node storage is not HA or backup. See [Kubernetes guide](docs/architecture/kubernetes.md).
 
-The [persistence recovery drill](docs/runbooks/kubernetes-persistence.md) compares incident/job state and Kafka partition end offsets before and after real pod replacement. New CI verification pending.
+The [persistence recovery drill](docs/runbooks/kubernetes-persistence.md) compares incident/job state and Kafka partition end offsets before and after real pod replacement. [Persistence CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064413429).
 
 ## Database recovery
 
-The [PostgreSQL restore drill](docs/runbooks/postgres-restore.md) creates a logical backup and restores it into a separate temporary database. It checks the incident, remediation evidence, audit, inbox and outbox records without overwriting the source. This local test is not a coordinated Kafka/PostgreSQL recovery plan. CI verification pending.
+The [PostgreSQL restore drill](docs/runbooks/postgres-restore.md) creates a logical backup and restores it into a separate temporary database. It checks the incident, remediation evidence, audit, inbox and outbox records without overwriting the source. This local test is not a coordinated Kafka/PostgreSQL recovery plan. [Restore CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064464894).
 
 ## Schema lifecycle
 
-An ordered, checksummed [migration ledger](docs/architecture/migrations.md) now prevents repeated DDL on service startup, serializes concurrent replicas and rejects schema checksum mismatches. CI covers concurrent startup and stable constraint identity; new verification pending.
+An ordered, checksummed [migration ledger](docs/architecture/migrations.md) now prevents repeated DDL on service startup, serializes concurrent replicas and rejects schema checksum mismatches. [Concurrent migration CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064513027).
 
 ## Dependency-aware readiness
 
-Ingest and workflow expose `/readyz` separately from process liveness `/healthz`. Ingest checks a Kafka partition leader and optional Redis; workflow checks PostgreSQL and an OPA decision. Kubernetes removes unready API pods from Service endpoints without restarting a healthy process solely because a dependency is down. The outage drills assert liveness remains available and readiness returns 503. Readiness is a point-in-time sample, not a guarantee of all partitions or future request success. CI verification pending.
+Ingest and workflow expose `/readyz` separately from process liveness `/healthz`. Ingest checks a Kafka partition leader and optional Redis; workflow checks PostgreSQL and an OPA decision. Kubernetes removes unready API pods from Service endpoints without restarting a healthy process solely because a dependency is down. The outage drills assert liveness remains available and readiness returns 503. Readiness is a point-in-time sample, not a guarantee of all partitions or future request success. [Readiness/outage CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064602921).
 
 ## Kafka replay safety
 

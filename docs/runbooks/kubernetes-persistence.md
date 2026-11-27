@@ -6,4 +6,4 @@ Use only a disposable local kind cluster running the AETHER Helm chart with defa
 bash tests/kubernetes-persistence-smoke.sh
 ```
 
-Both role tokens and kubectl, curl, jq, Bash are required. Run after the namespace and Helm chart have been initialized. Do not run during other ingestion traffic; the offset comparison assumes no other input producers. This tests single-node pod recovery, not disk/node loss or high availability. It does not prove every Kafka message byte was retained. Fixture state is ephemeral independently of incident/job state. CI verification pending.
+Both role tokens and kubectl, curl, jq, Bash are required. Run after the namespace and Helm chart have been initialized. Do not run during other ingestion traffic; the offset comparison assumes no other input producers. This tests single-node pod recovery, not disk/node loss or high availability. It does not prove every Kafka message byte was retained. Fixture state is ephemeral independently of incident/job state. Verified in [run 46064413429](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064413429).
