@@ -1,7 +1,7 @@
 # AETHER
 ### Autonomous Event-driven Telemetry, Execution & Resilience
 
-> **Status: Phase 4/5 prototype — durable events, admission control and approval simulation.** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
+> **Status: integrated local engineering lab — durable workflows, policy gates, remediation, observability and GitOps.** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
 
@@ -32,6 +32,10 @@ Modern infrastructure produces alerts, logs and events, but humans often still h
 
 ## System overview
 
+![Current integrated AETHER architecture](docs/architecture/visuals/current-system.svg)
+
+The current implementation is shown above. The original target architecture below is retained for historical context.
+
 ![AETHER architecture](docs/architecture/aether-system.svg)
 
 The visual below is the planned event-to-action pipeline; it does **not** imply the entire platform is implemented.
@@ -58,11 +62,16 @@ flowchart LR
 
 > Diagram describes **target architecture**, not a claim that all components are implemented.
 
-## Initial repository layout
+## Repository layout
 
 | Path | Purpose |
 | --- | --- |
 | `services/control-api/` | Go HTTP API and health endpoints |
+| `services/event-fabric/` | Six Go processes, persistence, policy and telemetry |
+| `automation/` | Ansible/Puppet reconciliation adapters |
+| `deploy/helm/`, `deploy/gitops/` | Kubernetes and Argo CD |
+| `deploy/observability/` | Prometheus and Grafana |
+| `tests/` | Integration and recovery drills |
 | `docs/architecture/` | Architecture diagrams and decisions |
 | `docs/roadmap.md` | Milestones and acceptance criteria |
 | `contracts/events/` | Versioned event schemas |
@@ -98,7 +107,7 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 
 ## Event fabric preview (Phase 2)
 
-The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on main. Runtime verification is pending. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
+The Go ingestion and consumer processes, Kafka Compose environment and smoke test are available on main. Prior CI verified the event fabric. See [event fabric architecture and local run instructions](docs/architecture/event-fabric.md).
 
 ### Event ingestion and processing flow
 
@@ -118,7 +127,7 @@ flowchart TD
 
 ![Kafka architecture — telemetry ingestion, three partitions, incident consumer and dead-letter queue](docs/architecture/kafka-event-fabric.svg)
 
-*Implemented event-processing design. Runtime verification pending.*
+*Implemented event-processing design; prior integration CI passed.*
 
 Events are routed using their correlation IDs as partition keys. Malformed broker messages are sent to a dead-letter topic before their consumer offsets are committed.
 
@@ -153,7 +162,7 @@ sequenceDiagram
  R->>P: Mark published and commit
 ```
 
-**Guarantee:** at-least-once delivery with transactional inbox deduplication. No end-to-end exactly-once claim. See [failure model](docs/architecture/outbox-relay.md). Runtime verification is pending.
+**Guarantee:** at-least-once delivery with transactional inbox deduplication. No end-to-end exactly-once claim. See [failure model](docs/architecture/outbox-relay.md). Prior integration CI passed.
 
 ## Approval-gated workflow (local simulation)
 
@@ -224,6 +233,8 @@ Operators request approval and simulate; approvers approve or reject. OPA denies
 
 ## Durable lab execution
 
+![Approved execution and bounded retry flow](docs/architecture/visuals/execution-recovery.svg)
+
 ```mermaid
 flowchart LR
  Approved -->|execute_lab| Transaction[Atomic incident + job insert]
@@ -278,6 +289,8 @@ These runs validate particular commits, not every later change. The project rema
 
 ## GitOps reconciliation
 
+![Verified Argo CD self-healing sequence](docs/architecture/visuals/gitops-self-healing.svg)
+
 The dedicated Argo CD workflow installs a pinned controller, deploys the exact commit through Git (not Helm install), runs approval and execution smoke tests, and checks recovery from replica drift. See [GitOps architecture and local setup](docs/architecture/gitops.md). Automated pruning is disabled. Controller integration passed in [run 45901613370](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45901613370): the exact Git revision synced successfully, the approved workflow completed, and Argo CD restored the fixture from zero to one replica.
 
 ## Kubernetes persistence
@@ -300,12 +313,16 @@ Ingest and workflow expose `/readyz` separately from process liveness `/healthz`
 
 ## Kafka replay safety
 
-A new [consumer restart and duplicate-event drill](docs/runbooks/kafka-replay.md) verifies a replayed event has only one inbox/outbox effect. PostgreSQL concurrency coverage also races 32 writes across eight unique IDs and checks the incident projection. These are targeted at-least-once delivery invariants; new CI verification pending.
+A new [consumer restart and duplicate-event drill](docs/runbooks/kafka-replay.md) verifies a replayed event has only one inbox/outbox effect. PostgreSQL concurrency coverage also races 32 writes across eight unique IDs and checks the incident projection. These targeted at-least-once invariants passed in [CI run 46064765194](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064765194).
 
 ## Kubernetes network isolation
 
 The Helm chart includes a default-deny ingress policy with explicit backend allowlists. Ingest/workflow remain reachable on their API ports. A dedicated smoke test checks unauthorized pod access against actual ready backend IPs, while the ordinary workflow tests exercise permitted connections. Requires a NetworkPolicy-capable CNI; egress is not restricted. See [network design](docs/architecture/network-isolation.md). CI verification pending.
 
 ## Queue observability and alerts
+
+![Illustrative HTTP and queue monitoring chart previews](docs/architecture/visuals/operations-preview.svg)
+
+*Illustrative curves only, not CI measurements or live Grafana screenshots. The committed Grafana dashboard contains HTTP, pending-work and oldest-outbox panels; the preview also depicts the available failed-job metric.*
 
 Workflow metrics now expose durable queue depth, oldest unpublished age and remediation failure counts, with explicit collection health. Grafana includes queue panels and Prometheus evaluates stalled-outbox and unavailable-collector alerts. [Design and limits](docs/architecture/queue-observability.md). Alertmanager notification delivery is not configured; CI verification pending.
