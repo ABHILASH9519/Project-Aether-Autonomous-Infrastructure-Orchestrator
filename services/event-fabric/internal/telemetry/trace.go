@@ -75,3 +75,17 @@ func WorkflowHTTP(next http.Handler)http.Handler{
 		next.ServeHTTP(w,r.WithContext(ctx))
 	})
 }
+
+// Parent captures validated W3C traceparent only, without baggage.
+func Parent(ctx context.Context) string {
+ c:=propagation.MapCarrier{}
+ propagator.Inject(ctx,c)
+ return c.Get("traceparent")
+}
+
+// Resume continues a trace across durable storage. Empty or invalid parents
+// start a new root when no valid span is present in the incoming context.
+func Resume(ctx context.Context,parent,name string,kind trace.SpanKind)(context.Context,trace.Span){
+ ctx=propagator.Extract(ctx,propagation.MapCarrier{"traceparent":parent})
+ return otel.Tracer("aether").Start(ctx,name,trace.WithSpanKind(kind))
+}

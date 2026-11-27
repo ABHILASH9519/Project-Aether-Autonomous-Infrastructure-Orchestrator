@@ -7,6 +7,7 @@ import (
 
 	"aether/event-fabric/internal/event"
 	"aether/event-fabric/internal/telemetry"
+	"aether/event-fabric/internal/telemetry"
 )
 
 type Store struct { DB *sql.DB }

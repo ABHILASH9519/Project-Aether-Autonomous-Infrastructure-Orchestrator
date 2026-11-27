@@ -97,6 +97,7 @@ services:
     entrypoint: ["/relay"]
     environment:
       AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
+      AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       KAFKA_BROKERS: kafka:29092
     restart: on-failure
