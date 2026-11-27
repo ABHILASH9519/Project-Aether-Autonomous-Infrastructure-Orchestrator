@@ -554,3 +554,20 @@ flowchart LR
 ```
 
 Run `make load` against a ready local stack. The Go generator measures actual HTTP response latency and verifies the event count; CI uploads the JSON report. This is a bounded smoke benchmark, not a throughput or production SLO claim. See [load test runbook](docs/runbooks/load-testing.md). New CI pending.
+
+## Supply-chain security evidence
+
+```mermaid
+flowchart LR
+ Git[Source revision] --> Modules[Go module verification]
+ Git --> Build[Container build]
+ Build --> Archive[Exported image archive]
+ Archive --> Scan[Trivy scanner]
+ Scan --> SBOM[CycloneDX SBOM]
+ Scan --> CVE[High / critical findings report]
+ Modules --> Artifact[CI evidence artifact]
+ SBOM --> Artifact
+ CVE --> Artifact
+```
+
+The [supply-chain workflow](.github/workflows/supply-chain.yml) records Go dependency inventory, image metadata, an SBOM and a vulnerability report. The current scan is report-only, not a release gate. See [security evidence scope](docs/architecture/supply-chain.md). New CI verification pending.

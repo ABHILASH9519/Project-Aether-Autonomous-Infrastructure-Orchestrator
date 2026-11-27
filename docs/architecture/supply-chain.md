@@ -1,0 +1,5 @@
+# Supply-chain evidence
+
+The dedicated read-only CI workflow resolves Go dependencies, runs go mod verify, records the module inventory and builds the event-fabric image with its source revision label. Trivy v0.76.2 scans an exported Docker archive without access to the Docker socket and creates a CycloneDX SBOM and HIGH/CRITICAL vulnerability report. Artifacts are retained for 14 days.
+
+This is reporting, not a security gate: findings do not yet fail a release; scanner errors or malformed reports do fail CI. The workflow currently generates lockfiles in the runner and includes them in the artifacts; committing the verified lockfiles and requiring readonly builds are subsequent steps. The scanner only inventories the event-fabric image, not all infrastructure images. Tool and base image tags are versioned but not all digest pinned. The scan database is downloaded at runtime. No external registry publication, signature, attestation or production compliance claim is made. CI verification pending.

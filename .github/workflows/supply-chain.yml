@@ -1,0 +1,54 @@
+name: Supply chain evidence
+on:
+  push:
+    branches: [main]
+    paths: ["services/**", "automation/**", ".github/workflows/supply-chain.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TRIVY_IMAGE: aquasec/trivy:0.76.2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/event-fabric/go.mod
+          cache: false
+      - name: Resolve and verify Go module inventory
+        working-directory: services/event-fabric
+        run: |
+          go mod tidy
+          go mod verify
+          mkdir -p "$RUNNER_TEMP/aether-evidence"
+          cp go.mod go.sum "$RUNNER_TEMP/aether-evidence/"
+          go list -mod=readonly -m -json all > "$RUNNER_TEMP/aether-evidence/go-modules.json"
+          echo 'BEGIN AETHER GO.MOD'
+          cat go.mod
+          echo 'END AETHER GO.MOD'
+          echo 'BEGIN AETHER GO.SUM'
+          cat go.sum
+          echo 'END AETHER GO.SUM'
+      - name: Build source-revision-labeled image
+        run: |
+          docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" -t aether-event-fabric:scan services/event-fabric
+          docker image inspect aether-event-fabric:scan > "$RUNNER_TEMP/aether-evidence/image-inspect.json"
+          docker save aether-event-fabric:scan -o "$RUNNER_TEMP/aether-image.tar"
+      - name: Generate CycloneDX SBOM and vulnerability report
+        run: |
+          # Scanner sees an exported image, not the privileged Docker socket.
+          docker run --rm -v "$RUNNER_TEMP/aether-image.tar:/image.tar:ro" "$TRIVY_IMAGE" image --input /image.tar --format cyclonedx > "$RUNNER_TEMP/aether-evidence/image.cdx.json"
+          docker run --rm -v "$RUNNER_TEMP/aether-image.tar:/image.tar:ro" "$TRIVY_IMAGE" image --input /image.tar --scanners vuln --severity HIGH,CRITICAL --exit-code 0 --format json > "$RUNNER_TEMP/aether-evidence/vulnerabilities.json"
+          jq -e '.bomFormat == "CycloneDX" and (.components|length)>0' "$RUNNER_TEMP/aether-evidence/image.cdx.json"
+          jq -e '.Results | type == "array"' "$RUNNER_TEMP/aether-evidence/vulnerabilities.json"
+          jq '[.Results[]?.Vulnerabilities[]?] | group_by(.Severity) | map({severity:.[0].Severity,count:length})' "$RUNNER_TEMP/aether-evidence/vulnerabilities.json"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aether-supply-chain-evidence
+          path: ${{ runner.temp }}/aether-evidence/
+          if-no-files-found: ignore
+          retention-days: 14
