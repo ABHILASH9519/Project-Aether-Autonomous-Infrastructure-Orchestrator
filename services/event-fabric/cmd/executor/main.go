@@ -11,12 +11,16 @@ import (
 
 	"aether/event-fabric/internal/lab"
 	"aether/event-fabric/internal/store"
+	"aether/event-fabric/internal/telemetry"
 	_ "github.com/lib/pq"
 )
 
 func main(){
 	ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
 	defer stop()
+	shutdown,err:=telemetry.Init(ctx,"aether-executor")
+	if err!=nil{log.Fatal(err)}
+	defer func(){c,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_ = shutdown(c)}()
 	dsn:=os.Getenv("DATABASE_URL")
 	if dsn==""{log.Fatal("DATABASE_URL required")}
 	db,err:=sql.Open("postgres",dsn)

@@ -19,7 +19,10 @@ type migration struct {
 	sql string
 }
 
-var migrations = []migration{{1,baselineSchema}}
+//go:embed 002_trace_context.sql
+var traceSchema string
+
+var migrations = []migration{{1,baselineSchema},{2,traceSchema}}
 
 // Migrate serializes schema changes and commits each migration ledger entry
 // with its DDL. Existing installations without a ledger adopt the idempotent

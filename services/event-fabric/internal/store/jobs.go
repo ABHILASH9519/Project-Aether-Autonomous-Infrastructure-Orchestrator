@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+	"aether/event-fabric/internal/telemetry"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Repair func(context.Context,string) error
@@ -21,9 +23,10 @@ func (s Store) RunJobWithTimeout(ctx context.Context,repair Repair,timeout time.
 	defer tx.Rollback()
 	var id string
 	var attempts int
-	err=tx.QueryRowContext(ctx,`SELECT correlation_id, attempts FROM remediation_jobs
+	var parent string
+	err=tx.QueryRowContext(ctx,`SELECT correlation_id, attempts, traceparent FROM remediation_jobs
 WHERE status='pending' AND available_at<=now() ORDER BY available_at,correlation_id
-LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id,&attempts)
+LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id,&attempts,&parent)
 	if errors.Is(err,sql.ErrNoRows){return false,nil}
 	if err!=nil{return false,err}
 	var state string
@@ -31,7 +34,9 @@ LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id,&attempts)
 	if err=tx.QueryRowContext(ctx,"SELECT state,version FROM incidents WHERE correlation_id=$1 FOR UPDATE",id).Scan(&state,&version);err!=nil{return false,err}
 	if state!="executing"{return false,errors.New("job incident is not executing")}
 	attempts++
-	opctx,cancel:=context.WithTimeout(ctx,timeout)
+	jobCtx,span:=telemetry.Resume(ctx,parent,"remediation attempt",trace.SpanKindConsumer)
+	defer span.End()
+	opctx,cancel:=context.WithTimeout(jobCtx,timeout)
 	repairErr:=repair(opctx,id)
 	cancel()
 	if ctx.Err()!=nil{return false,ctx.Err()}

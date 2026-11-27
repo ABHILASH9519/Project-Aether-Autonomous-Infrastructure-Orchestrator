@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"aether/event-fabric/internal/event"
+	"aether/event-fabric/internal/telemetry"
 )
 
 type Store struct { DB *sql.DB }
@@ -26,7 +27,7 @@ ON CONFLICT(correlation_id) DO UPDATE SET event_count=incidents.event_count+1,la
 	if err != nil { return false, err }
 	payload, err := json.Marshal(e)
 	if err != nil { return false, err }
-	_, err = tx.ExecContext(ctx, "INSERT INTO incident_outbox(event_id,correlation_id,payload) VALUES ($1,$2,$3::jsonb)",e.ID,e.CorrelationID,string(payload))
+	_, err = tx.ExecContext(ctx, "INSERT INTO incident_outbox(event_id,correlation_id,payload,traceparent) VALUES ($1,$2,$3::jsonb,$4)",e.ID,e.CorrelationID,string(payload),telemetry.Parent(ctx))
 	if err != nil { return false, err }
 	if err := tx.Commit(); err != nil { return false, err }
 	return true,nil

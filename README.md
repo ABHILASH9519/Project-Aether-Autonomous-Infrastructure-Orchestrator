@@ -320,7 +320,7 @@ sequenceDiagram
 ```
 
 
-Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). HTTP-to-Kafka tracing passed in run 45897963370; outbox and execution spans are not yet connected.
+Set `AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` before starting the observability profile. Jaeger listens on http://localhost:16686. W3C trace headers connect HTTP ingestion to Kafka consumer spans. See [trace architecture](docs/architecture/tracing.md). HTTP-to-Kafka tracing passed in run 45897963370; the relay and execution worker now resume persisted trace context through migration 2; new CI verification pending.
 
 ## Local cloud evidence archive
 
@@ -577,3 +577,16 @@ The [supply-chain workflow](.github/workflows/supply-chain.yml) records Go depen
 ### Alert rule regression tests
 
 Promtool now evaluates synthetic time series to check the one-minute alert delay, firing conditions, and recovery of the outbox, database collection and workflow scrape alerts. Synthetic time series are test fixtures, not measured production data. New CI pending.
+
+### Durable trace context
+
+```mermaid
+flowchart LR
+ HTTP[Ingest HTTP span] --> Kafka --> Consume[Consumer span]
+ Consume --> Outbox[(Outbox traceparent)] --> Relay[Relay producer span]
+ Command[Workflow transition span] --> Job[(Job traceparent)] --> Executor[Remediation attempt span]
+ Relay -. OTLP .-> Jaeger
+ Executor -. OTLP .-> Jaeger
+```
+
+Two independent causal traces now cross durable PostgreSQL queue boundaries. No baggage, credentials or event payload is persisted as tracing metadata. New Jaeger smoke tests check the relay and execution spans. Fixture HTTP and policy spans are not yet instrumented. See [trace design](docs/architecture/tracing.md).

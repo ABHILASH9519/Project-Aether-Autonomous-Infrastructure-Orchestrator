@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/store"
+	"aether/event-fabric/internal/telemetry"
 	"aether/event-fabric/internal/readiness"
 	"aether/event-fabric/internal/policy"
 	"aether/event-fabric/internal/metrics"
@@ -22,6 +23,9 @@ import (
 func main(){
 	ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
 	defer stop()
+	shutdown,err:=telemetry.Init(ctx,"aether-workflow")
+	if err!=nil{log.Fatal(err)}
+	defer func(){c,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_ = shutdown(c)}()
 	db,err:=sql.Open("postgres",os.Getenv("DATABASE_URL"))
 	if err!=nil{log.Fatal(err)}
 	defer db.Close()
@@ -35,7 +39,7 @@ func main(){
 	err=st.Migrate(initCtx)
 	cancel()
 	if err!=nil{log.Fatal(err)}
-	srv:=&http.Server{Addr:":8082",Handler:readiness.Wrap(metrics.WithQueues((&metrics.HTTP{}).Wrap(handler),func(c context.Context)(metrics.Queues,error){return metrics.QueryQueues(c,db)}),db.PingContext,func(c context.Context)error{allowed,err:=gate.Allow(c,"operator","acknowledge");if err!=nil{return err};if !allowed{return errors.New("policy unavailable")};return nil}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
+	srv:=&http.Server{Addr:":8082",Handler:readiness.Wrap(metrics.WithQueues((&metrics.HTTP{}).Wrap(telemetry.WorkflowHTTP(handler)),func(c context.Context)(metrics.Queues,error){return metrics.QueryQueues(c,db)}),db.PingContext,func(c context.Context)error{allowed,err:=gate.Allow(c,"operator","acknowledge");if err!=nil{return err};if !allowed{return errors.New("policy unavailable")};return nil}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
 	go func(){
 		<-ctx.Done()
 		shutdown,done:=context.WithTimeout(context.Background(),10*time.Second)

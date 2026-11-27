@@ -16,4 +16,4 @@ sequenceDiagram
  C-->>J: OTLP span
 ```
 
-Enable with `export AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` and start the workflow and observability profiles. Browse http://localhost:16686. Tracing covers the ingress-to-consumer path only; the outbox and remediation queue do not yet persist trace context. Local sampling accepts parent sampling decisions and samples new roots. No production collector or TLS is configured. CI verification pending.
+Enable with `export AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces` and start the workflow and observability profiles. Browse http://localhost:16686. Tracing now persists W3C traceparent in the outbox and remediation job tables through additive migration 2. The relay resumes the consumer trace, and the executor resumes the separate authenticated workflow command trace. Existing records with empty parents create new roots. The two paths are not automatically joined into one incident-wide trace. Local sampling accepts parent sampling decisions and samples new roots. No production collector or TLS is configured. Prior ingestion tracing passed. New durable-boundary verification pending.

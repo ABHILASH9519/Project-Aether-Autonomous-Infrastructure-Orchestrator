@@ -15,7 +15,9 @@ test "$(curl -s -o /dev/null -w '%{http_code}' -H "$auth" -d '{"expected_version
 transition() {
   local version="$1" action="$2" state="$3" credential="$auth"
   if [[ "$action" == approve ]]; then credential="Authorization: Bearer $AETHER_APPROVER_TOKEN"; fi
-  curl -fsS -H "$credential" -H 'Content-Type: application/json' -d "{\"expected_version\":$version,\"action\":\"$action\"}" "$url/transitions" |
+  local trace_header=()
+  if [[ -n "${AETHER_EXECUTION_TRACEPARENT:-}" && "$action" == execute_lab ]]; then trace_header=(-H "traceparent: $AETHER_EXECUTION_TRACEPARENT"); fi
+  curl -fsS "${trace_header[@]}" -H "$credential" -H 'Content-Type: application/json' -d "{\"expected_version\":$version,\"action\":\"$action\"}" "$url/transitions" |
     jq -e --arg state "$state" '.state == $state' >/dev/null
 }
 transition 0 acknowledge acknowledged

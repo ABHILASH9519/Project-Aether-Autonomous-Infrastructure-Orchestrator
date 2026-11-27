@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"aether/event-fabric/internal/lifecycle"
+	"aether/event-fabric/internal/telemetry"
 )
 
 var ErrVersion = errors.New("incident version conflict")
@@ -46,7 +47,7 @@ func (s Store) Transition(ctx context.Context,id string,expected int64,action,ro
 	_,err=tx.ExecContext(ctx,"UPDATE incidents SET state=$2,version=$3,updated_at=now() WHERE correlation_id=$1",id,i.State,i.Version)
 	if err!=nil{return Incident{},err}
 	if action=="execute_lab" {
-		if _,err=tx.ExecContext(ctx,"INSERT INTO remediation_jobs(correlation_id) VALUES($1)",id);err!=nil{return Incident{},err}
+		if _,err=tx.ExecContext(ctx,"INSERT INTO remediation_jobs(correlation_id,traceparent) VALUES($1,$2)",id,telemetry.Parent(ctx));err!=nil{return Incident{},err}
 	}
 	if err=tx.Commit();err!=nil{return Incident{},err}
 	return i,nil
