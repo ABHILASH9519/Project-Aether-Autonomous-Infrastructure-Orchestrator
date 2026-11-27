@@ -66,6 +66,8 @@ jobs:
       - run: bash tests/postgres-restore-smoke.sh
       - run: bash tests/policy-outage-smoke.sh
       - run: bash tests/redis-outage-smoke.sh
+      - name: Verify alert firing and recovery rules
+        run: docker run --rm --network none --entrypoint /bin/promtool -v "$PWD/deploy/observability:/rules:ro" prom/prometheus:v2.55.1 test rules /rules/alerts.test.yml
       - run: bash tests/observability-smoke.sh
       - run: bash tests/tracing-smoke.sh
       - uses: actions/setup-go@v5
@@ -74,7 +76,9 @@ jobs:
           cache: false
       - name: Measure bounded HTTP load and verify projection
         working-directory: services/event-fabric
-        run: go run ./cmd/loadtest -requests 40 -concurrency 4 | tee "$RUNNER_TEMP/aether-load.json"
+        run: |
+          set -o pipefail
+          go run ./cmd/loadtest -requests 40 -concurrency 4 | tee "$RUNNER_TEMP/aether-load.json"
       - if: always()
         uses: actions/upload-artifact@v4
         with:

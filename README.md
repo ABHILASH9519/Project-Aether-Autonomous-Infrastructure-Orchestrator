@@ -372,6 +372,8 @@ The local suite includes [OPA outage and recovery](docs/runbooks/policy-outage.m
 | Versioned migrations | [9b66efc / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064513027) |
 | Dependency readiness and outage drills | [49dbcc6 / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064602921) |
 | GitOps with PVCs | [ba63e6a / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064370803) |
+| Latency histograms and monitoring | [1cd852d / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065272531) |
+| Argo CD initialization fix and full sync | [1cd852d / CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065272634) |
 
 These runs validate particular commits, not every later change. The project remains a local engineering lab; production HA, identity, node-loss recovery, live cloud execution, full trace coverage and registry-based image promotion remain outside the verified scope.
 
@@ -571,3 +573,7 @@ flowchart LR
 ```
 
 The [supply-chain workflow](.github/workflows/supply-chain.yml) records Go dependency inventory, image metadata, an SBOM and a vulnerability report. The current scan is report-only, not a release gate. See [security evidence scope](docs/architecture/supply-chain.md). New CI verification pending.
+
+### Alert rule regression tests
+
+Promtool now evaluates synthetic time series to check the one-minute alert delay, firing conditions, and recovery of the outbox, database collection and workflow scrape alerts. Synthetic time series are test fixtures, not measured production data. New CI pending.

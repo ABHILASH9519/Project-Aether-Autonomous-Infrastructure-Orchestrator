@@ -4,4 +4,6 @@ The workflow metrics endpoint includes a bounded, one-second SQL snapshot of pen
 
 Prometheus evaluates alerts for outbox stagnation, failed queue collection and workflow scrape failure. The Grafana HTTP dashboard also contains queue depth and oldest-age panels. The local alert rules do not send notifications because no Alertmanager is configured. Counts are database-wide; when scraping multiple workflow replicas use max, not sum. Full table counts may become expensive at larger scale; retention and preaggregated metrics remain future work. CI verifies metric exposition and loaded rule names.
 
-Queue metrics and alert loading passed in [run 46064895229](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064895229). New latency histogram and failed-job panels require separate verification.
+Queue metrics and alert loading passed in [run 46064895229](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064895229). Latency histogram and failed-job panels passed in [run 46065272531](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065272531).
+
+Promtool unit tests now check each alert's pending/firing/recovery behavior against synthetic time series; CI verification pending.

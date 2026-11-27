@@ -1,0 +1,40 @@
+rule_files:
+  - alerts.yml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'aether_outbox_oldest_seconds{job="workflow",instance="workflow:8082"}'
+        values: '0 61 61 0'
+      - series: 'aether_queue_collection_success{job="workflow",instance="workflow:8082"}'
+        values: '1 0 0 1'
+      - series: 'up{job="workflow",instance="workflow:8082"}'
+        values: '1 0 0 1'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: AetherOutboxStalled
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: AetherOutboxStalled
+        exp_alerts:
+          - exp_labels: {job: workflow, instance: 'workflow:8082', severity: warning}
+            exp_annotations: {summary: 'Oldest unpublished event is older than 60 seconds'}
+      - eval_time: 3m
+        alertname: AetherOutboxStalled
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: AetherQueueCollectionFailed
+        exp_alerts:
+          - exp_labels: {job: workflow, instance: 'workflow:8082', severity: warning}
+            exp_annotations: {summary: Workflow cannot collect database queue metrics}
+      - eval_time: 3m
+        alertname: AetherQueueCollectionFailed
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: AetherWorkflowScrapeUnavailable
+        exp_alerts:
+          - exp_labels: {job: workflow, instance: 'workflow:8082', severity: warning}
+            exp_annotations: {summary: Workflow metrics endpoint is unavailable}
+      - eval_time: 3m
+        alertname: AetherWorkflowScrapeUnavailable
+        exp_alerts: []
