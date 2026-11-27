@@ -598,3 +598,5 @@ Two independent causal traces now cross durable PostgreSQL queue boundaries. No 
 ### Security remediation baseline
 
 Container builders and Go CI now target Go 1.26.11, a supported security-patched release ([upstream release history](https://go.dev/doc/devel/release)). The module's minimum Go language version is unchanged. The scan emits deduplicated package/CVE triage and available fixed versions for follow-up upgrades. This is the first mitigation step, not a claim that all 189 earlier findings are resolved. The new build and scan must pass before measuring the improvement.
+
+Registry integration follow-up: manifest verification passed, but node image pulls failed due to the loopback alias. The GitOps workflow now explicitly configures the containerd CRI registry path and verifies each node can pull the digest before Argo CD installation. Corrected runtime verification pending.

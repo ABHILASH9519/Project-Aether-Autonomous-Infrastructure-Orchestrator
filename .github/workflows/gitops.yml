@@ -20,6 +20,7 @@ jobs:
       - uses: helm/kind-action@v1.12.0
         with:
           cluster_name: aether
+          config: deploy/gitops/kind-registry.yaml
           version: v0.30.0
           node_image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
       - name: Build and publish immutable image to local registry
@@ -30,6 +31,11 @@ jobs:
           digest=$(bash deploy/gitops/publish-local.sh "$AETHER_GIT_REVISION")
           echo "AETHER_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
           echo "Published source $AETHER_GIT_REVISION as $digest"
+      - name: Verify registry pull through every node CRI
+        run: |
+          for node in $(kind get nodes --name aether); do
+            docker exec "$node" crictl pull "localhost:5001/aether/event-fabric@$AETHER_IMAGE_DIGEST"
+          done
       - name: Install pinned Argo CD controller
         run: |
           kubectl create namespace argocd
