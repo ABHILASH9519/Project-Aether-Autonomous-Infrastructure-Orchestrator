@@ -2,7 +2,7 @@ name: Argo CD GitOps lab
 on:
   push:
     branches: [main]
-    paths: ["deploy/gitops/**", "deploy/helm/**", "deploy/policy/**", "services/event-fabric/**", "tests/gitops-smoke.sh", "tests/kubernetes-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/gitops.yml"]
+    paths: ["deploy/gitops/**", "deploy/helm/**", "deploy/policy/**", "services/event-fabric/**", "tests/gitops-smoke.sh", "tests/gitops-image-smoke.sh", "tests/kubernetes-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/gitops.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,12 +22,14 @@ jobs:
           cluster_name: aether
           version: v0.30.0
           node_image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
-      - name: Build and preload application image
+      - name: Build and publish immutable image to local registry
         run: |
           helm lint deploy/helm/aether
           cmp deploy/policy/workflow.rego deploy/helm/aether/files/workflow.rego
-          docker build -t aether-event-fabric:local services/event-fabric
-          kind load docker-image aether-event-fabric:local --name aether
+          bash deploy/gitops/local-registry.sh aether
+          digest=$(bash deploy/gitops/publish-local.sh "$AETHER_GIT_REVISION")
+          echo "AETHER_IMAGE_DIGEST=$digest" >> "$GITHUB_ENV"
+          echo "Published source $AETHER_GIT_REVISION as $digest"
       - name: Install pinned Argo CD controller
         run: |
           kubectl create namespace argocd
@@ -51,12 +53,18 @@ jobs:
           kubectl create namespace aether
           kubectl -n aether create secret generic aether-local --from-literal=postgres-password=ci-only --from-literal=database-url='postgres://aether:ci-only@postgres:5432/aether?sslmode=disable' --from-literal=operator-token="$AETHER_OPERATOR_TOKEN" --from-literal=approver-token="$AETHER_APPROVER_TOKEN"
           kubectl apply -f deploy/gitops/project.yaml
-          kubectl patch --local -f deploy/gitops/application.yaml --type=merge -p "{\"spec\":{\"source\":{\"targetRevision\":\"$AETHER_GIT_REVISION\"}}}" -o yaml | kubectl apply -f -
+          patch=$(jq -nc --arg revision "$AETHER_GIT_REVISION" --arg digest "$AETHER_IMAGE_DIGEST" '{spec:{source:{targetRevision:$revision,helm:{parameters:[{name:"image.repository",value:"localhost:5001/aether/event-fabric"},{name:"image.digest",value:$digest},{name:"image.pullPolicy",value:"Always"}]}}}}')
+          kubectl patch --local -f deploy/gitops/application.yaml --type=merge -p "$patch" -o yaml | kubectl apply -f -
       - name: Verify Git sync, approved workflow and drift reconciliation
-        run: bash tests/gitops-smoke.sh
+        run: |
+          bash tests/gitops-smoke.sh
+          bash tests/gitops-image-smoke.sh
       - if: always()
         name: Diagnostics
         run: |
           kubectl -n argocd get applications,pods,events || true
           kubectl -n argocd get application aether-local -o yaml || true
           kubectl -n aether get deployments,pods,jobs,events || true
+      - if: always()
+        name: Remove disposable registry
+        run: docker rm -f aether-lab-registry || true

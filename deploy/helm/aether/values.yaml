@@ -1,6 +1,7 @@
 image:
   repository: aether-event-fabric
   tag: local
+  digest: "" # Optional sha256 digest takes precedence over tag
   pullPolicy: Never
 existingSecret: aether-local
 resources:

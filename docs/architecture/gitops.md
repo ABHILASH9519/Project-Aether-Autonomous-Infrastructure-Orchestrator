@@ -16,7 +16,7 @@ sequenceDiagram
  T->>A: Confirm healthy synced revision
 ```
 
-CI pins the Application source to the exact checked-out commit and preloads the matching local image. No Helm install is used to create the application workload in this job. The test requires a healthy, synced revision and successful operation, runs the Kubernetes workflow/repair smoke tests, then injects replica drift and checks self-healing.
+CI pins the Application source to the exact checked-out commit, publishes the matching image to a disposable local registry and passes the manifest digest to Helm. See [image delivery](image-delivery.md). No Helm install is used to create the application workload in this job. The test requires a healthy, synced revision and successful operation, runs the Kubernetes workflow/repair smoke tests, then injects replica drift and checks self-healing.
 
 ## Local use
 
@@ -31,7 +31,7 @@ kubectl apply -f deploy/gitops/application.yaml
 kubectl -n argocd get application aether-local
 ```
 
-The committed Application tracks main. For reproducible local tests, patch targetRevision to the exact Git SHA corresponding to the loaded image and export AETHER_GIT_REVISION before running tests/gitops-smoke.sh. Do not deploy this over a separately Helm-managed release. This is a local lab: installing Argo CD requires cluster admin access; the application project scope is not a replacement for cluster security controls. CI does not test production credential management, pruning, promotion, HA, or a container registry.
+The committed Application tracks main. For reproducible local tests, patch targetRevision to the exact Git SHA corresponding to the loaded image and export AETHER_GIT_REVISION before running tests/gitops-smoke.sh. Do not deploy this over a separately Helm-managed release. This is a local lab: installing Argo CD requires cluster admin access; the application project scope is not a replacement for cluster security controls. The local registry delivery path is now in CI; production credential management, pruning, promotion and HA remain outside scope.
 
 ## Verified integration
 

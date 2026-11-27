@@ -525,3 +525,19 @@ Workflow metrics now expose durable queue depth, oldest unpublished age and reme
 ### Latency distribution
 
 HTTP request latency is now exported as a cumulative Prometheus histogram, with fixed buckets and bounded status-class labels. Grafana adds p50/p95/p99 estimates and historical failed-job count. Percentiles are estimates from buckets, not exact per-request measurements. New histogram tests and CI checks are committed; no benchmark results are claimed.
+
+## Immutable image delivery
+
+```mermaid
+flowchart LR
+ Git[Exact source commit] --> Build[Docker image build]
+ Build --> Registry[(Local OCI registry)]
+ Registry --> Digest[Resolve manifest digest]
+ Digest --> Argo[Argo CD Helm parameters]
+ Git --> Argo
+ Argo --> Pods[Six digest-pinned workloads]
+ Pods --> Verify[Check image references and readiness]
+
+```
+
+GitOps CI now builds, pushes and resolves an image digest through a disposable local registry. Argo CD deploys the exact digest and tests all six workloads. Default Helm remains compatible with local preloaded images. See [image delivery design](docs/architecture/image-delivery.md). New registry CI pending; no external registry publication is performed.
