@@ -599,8 +599,29 @@ Two independent causal traces now cross durable PostgreSQL queue boundaries. No 
 
 Container builders and Go CI now target Go 1.26.11, a supported security-patched release ([upstream release history](https://go.dev/doc/devel/release)). The module's minimum Go language version is unchanged. The scan emits deduplicated package/CVE triage and available fixed versions for follow-up upgrades. This is the first mitigation step, not a claim that all 189 earlier findings are resolved. The [follow-up scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671) found 5 critical and 75 high entries, versus 8 and 181 previously. Remaining vulnerabilities require remediation.
 
-Registry integration follow-up: manifest verification passed, but node image pulls failed due to the loopback alias. The GitOps workflow now explicitly configures the containerd CRI registry path and verifies each node can pull the digest before Argo CD installation. Corrected runtime verification pending.
+Registry integration follow-up: manifest verification passed, but node image pulls failed due to the loopback alias. The GitOps workflow now explicitly configures the containerd CRI registry path and verifies each node can pull the digest before Argo CD installation. Full registry-based GitOps CI passed in [run 46067477513](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067477513).
 
 ## CI failure analysis
 
-See [CI triage runbook](docs/runbooks/ci-triage.md) for failed-run evidence, root causes and verified corrections. The corrected Go tracing and read-only build passed; the registry node pull preflight passed, and full GitOps synchronization must be verified separately. Integration jobs now wait for source-level tests, and GitOps failure diagnostics collect controller and registry evidence. Historical red runs remain immutable.
+See [CI triage runbook](docs/runbooks/ci-triage.md) for failed-run evidence, root causes and verified corrections. The corrected Go tracing and read-only build passed; Full registry-based GitOps CI passed in [run 46067477513](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067477513). Integration jobs now wait for source-level tests, and GitOps failure diagnostics collect controller and registry evidence. Historical red runs remain immutable.
+
+### CI validation sequence
+
+```mermaid
+flowchart TD
+ Commit[Commit to main] --> Verify[Verify dependencies]
+ Verify --> Test[Go race tests]
+ Test --> Build[Go vet and build]
+ Build --> Gate{Source checks pass?}
+ Gate -->|Yes| Integration[Docker integration]
+ Gate -->|No| Fail[Fail without redundant build]
+ Integration --> Result{Integration passes?}
+ Result -->|Yes| Success[Successful CI]
+ Result -->|No| Diagnostics[Preserve failure and collect evidence]
+```
+
+### Measured security scan comparison
+
+![Actual scanner findings before and after Go toolchain upgrade](docs/architecture/visuals/security-scan-comparison.svg)
+
+[Initial scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065864664) and [follow-up scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671). Counts are scanner result entries, not unique CVEs or a security clearance. Remaining findings require dependency remediation.
