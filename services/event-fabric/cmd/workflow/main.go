@@ -13,6 +13,7 @@ import (
 
 	"aether/event-fabric/internal/store"
 	"aether/event-fabric/internal/telemetry"
+	"aether/event-fabric/internal/telemetry"
 	"aether/event-fabric/internal/readiness"
 	"aether/event-fabric/internal/policy"
 	"aether/event-fabric/internal/metrics"
@@ -23,6 +24,9 @@ import (
 func main(){
 	ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
 	defer stop()
+ shutdown,err:=telemetry.Init(ctx,"aether-workflow")
+ if err!=nil{log.Fatal(err)}
+ defer func(){c,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_ = shutdown(c)}()
 	shutdown,err:=telemetry.Init(ctx,"aether-workflow")
 	if err!=nil{log.Fatal(err)}
 	defer func(){c,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel();_ = shutdown(c)}()

@@ -1,9 +1,9 @@
 name: Event fabric
 on:
   push:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
   pull_request:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/kafka-replay-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "tests/execution-tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
 permissions:
   contents: read
 jobs:
@@ -72,6 +72,7 @@ jobs:
         run: docker run --rm --network none --entrypoint /bin/promtool -v "$PWD/deploy/observability:/rules:ro" prom/prometheus:v2.55.1 test rules /rules/alerts.test.yml
       - run: bash tests/observability-smoke.sh
       - run: bash tests/tracing-smoke.sh
+      - run: bash tests/execution-tracing-smoke.sh
       - run: bash tests/execution-tracing-smoke.sh
       - uses: actions/setup-go@v5
         with:

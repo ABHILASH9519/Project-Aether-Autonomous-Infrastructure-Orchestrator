@@ -6,6 +6,7 @@ import (
 
 	"aether/event-fabric/internal/lifecycle"
 	"aether/event-fabric/internal/telemetry"
+	"aether/event-fabric/internal/telemetry"
 )
 
 var ErrVersion = errors.New("incident version conflict")

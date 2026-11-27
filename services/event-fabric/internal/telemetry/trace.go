@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"strings"
 
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
@@ -88,4 +89,13 @@ func Parent(ctx context.Context) string {
 func Resume(ctx context.Context,parent,name string,kind trace.SpanKind)(context.Context,trace.Span){
  ctx=propagator.Extract(ctx,propagation.MapCarrier{"traceparent":parent})
  return otel.Tracer("aether").Start(ctx,name,trace.WithSpanKind(kind))
+}
+
+func WorkflowHTTP(next http.Handler)http.Handler{
+ return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+  if r.Method!="POST" || !strings.HasPrefix(r.URL.Path,"/api/v1/incidents/") || !strings.HasSuffix(r.URL.Path,"/transitions"){next.ServeHTTP(w,r);return}
+  ctx,span:=Resume(r.Context(),r.Header.Get("traceparent"),"workflow transition",trace.SpanKindServer)
+  defer span.End()
+  next.ServeHTTP(w,r.WithContext(ctx))
+ })
 }
