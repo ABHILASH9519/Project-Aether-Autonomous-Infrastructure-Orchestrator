@@ -3,25 +3,12 @@ package store
 import (
 	"context"
 	"database/sql"
-	_ "embed"
 	"encoding/json"
 
 	"aether/event-fabric/internal/event"
 )
 
-//go:embed schema.sql
-var schema string
-
 type Store struct { DB *sql.DB }
-
-func (s Store) Migrate(ctx context.Context) error {
-	tx, err := s.DB.BeginTx(ctx, nil)
-	if err != nil { return err }
-	defer tx.Rollback()
-	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(62391501)"); err != nil { return err }
-	if _, err = tx.ExecContext(ctx, schema); err != nil { return err }
-	return tx.Commit()
-}
 
 // Apply atomically records a unique event, updates the incident and queues an outbox record.
 func (s Store) Apply(ctx context.Context, e event.Envelope) (bool, error) {

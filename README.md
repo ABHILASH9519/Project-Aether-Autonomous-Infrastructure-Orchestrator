@@ -284,3 +284,7 @@ The [persistence recovery drill](docs/runbooks/kubernetes-persistence.md) compar
 ## Database recovery
 
 The [PostgreSQL restore drill](docs/runbooks/postgres-restore.md) creates a logical backup and restores it into a separate temporary database. It checks the incident, remediation evidence, audit, inbox and outbox records without overwriting the source. This local test is not a coordinated Kafka/PostgreSQL recovery plan. CI verification pending.
+
+## Schema lifecycle
+
+An ordered, checksummed [migration ledger](docs/architecture/migrations.md) now prevents repeated DDL on service startup, serializes concurrent replicas and rejects schema checksum mismatches. CI covers concurrent startup and stable constraint identity; new verification pending.
