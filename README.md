@@ -288,3 +288,7 @@ The [PostgreSQL restore drill](docs/runbooks/postgres-restore.md) creates a logi
 ## Schema lifecycle
 
 An ordered, checksummed [migration ledger](docs/architecture/migrations.md) now prevents repeated DDL on service startup, serializes concurrent replicas and rejects schema checksum mismatches. CI covers concurrent startup and stable constraint identity; new verification pending.
+
+## Dependency-aware readiness
+
+Ingest and workflow expose `/readyz` separately from process liveness `/healthz`. Ingest checks a Kafka partition leader and optional Redis; workflow checks PostgreSQL and an OPA decision. Kubernetes removes unready API pods from Service endpoints without restarting a healthy process solely because a dependency is down. The outage drills assert liveness remains available and readiness returns 503. Readiness is a point-in-time sample, not a guarantee of all partitions or future request success. CI verification pending.

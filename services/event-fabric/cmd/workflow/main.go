@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"aether/event-fabric/internal/store"
+	"aether/event-fabric/internal/readiness"
 	"aether/event-fabric/internal/policy"
 	"aether/event-fabric/internal/metrics"
 	"aether/event-fabric/internal/workflow"
@@ -34,7 +35,7 @@ func main(){
 	err=st.Migrate(initCtx)
 	cancel()
 	if err!=nil{log.Fatal(err)}
-	srv:=&http.Server{Addr:":8082",Handler:(&metrics.HTTP{}).Wrap(handler),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
+	srv:=&http.Server{Addr:":8082",Handler:readiness.Wrap((&metrics.HTTP{}).Wrap(handler),db.PingContext,func(c context.Context)error{allowed,err:=gate.Allow(c,"operator","acknowledge");if err!=nil{return err};if !allowed{return errors.New("policy unavailable")};return nil}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
 	go func(){
 		<-ctx.Done()
 		shutdown,done:=context.WithTimeout(context.Background(),10*time.Second)

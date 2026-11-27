@@ -82,9 +82,10 @@ spec:
             - containerPort: {{ $cfg.port }}
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: {{ if $cfg.lab }}/healthz{{ else }}/readyz{{ end }}
               port: {{ $cfg.port }}
-            periodSeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 4
           livenessProbe:
             httpGet:
               path: /healthz

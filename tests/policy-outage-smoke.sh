@@ -15,6 +15,8 @@ done
 curl -fsS -H "$auth" "$url" | jq -e '.state=="open" and .version==0' >/dev/null
 trap '"${compose[@]}" start opa >/dev/null || true' EXIT
 "${compose[@]}" stop opa
+curl -fsS http://localhost:8082/healthz
+test "$(curl --max-time 5 -sS -o /dev/null -w '%{http_code}' http://localhost:8082/readyz)" = 503
 test "$(curl --max-time 10 -sS -o /dev/null -w '%{http_code}' -H "$auth" -H 'Content-Type: application/json' -d "$cmd" "$url/transitions")" = 503
 curl -fsS -H "$auth" "$url" | jq -e '.state=="open" and .version==0' >/dev/null
 "${compose[@]}" start opa
@@ -22,6 +24,7 @@ for i in {1..30}; do
   code=$(curl --max-time 10 -sS -o /dev/null -w '%{http_code}' -H "$auth" -H 'Content-Type: application/json' -d "$cmd" "$url/transitions")
   if [[ "$code" == 200 ]]; then
     curl -fsS -H "$auth" "$url" | jq -e '.state=="acknowledged" and .version==1'
+    curl -fsS http://localhost:8082/readyz
     trap - EXIT
     exit 0
   fi
