@@ -35,7 +35,7 @@ func main(){
 	err=st.Migrate(initCtx)
 	cancel()
 	if err!=nil{log.Fatal(err)}
-	srv:=&http.Server{Addr:":8082",Handler:readiness.Wrap((&metrics.HTTP{}).Wrap(handler),db.PingContext,func(c context.Context)error{allowed,err:=gate.Allow(c,"operator","acknowledge");if err!=nil{return err};if !allowed{return errors.New("policy unavailable")};return nil}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
+	srv:=&http.Server{Addr:":8082",Handler:readiness.Wrap(metrics.WithQueues((&metrics.HTTP{}).Wrap(handler),func(c context.Context)(metrics.Queues,error){return metrics.QueryQueues(c,db)}),db.PingContext,func(c context.Context)error{allowed,err:=gate.Allow(c,"operator","acknowledge");if err!=nil{return err};if !allowed{return errors.New("policy unavailable")};return nil}),ReadHeaderTimeout:5*time.Second,ReadTimeout:10*time.Second,WriteTimeout:10*time.Second,IdleTimeout:60*time.Second}
 	go func(){
 		<-ctx.Done()
 		shutdown,done:=context.WithTimeout(context.Background(),10*time.Second)

@@ -2,7 +2,7 @@
   "uid": "aether-http",
   "title": "AETHER / HTTP operations",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "10s",
   "time": {
     "from": "now-15m",
@@ -98,6 +98,55 @@
           "refId": "A",
           "expr": "sum by(job)(aether_http_inflight_requests)",
           "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Pending durable work",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aether-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(aether_outbox_pending)",
+          "legendFormat": "outbox"
+        },
+        {
+          "refId": "B",
+          "expr": "max(aether_remediation_pending)",
+          "legendFormat": "remediation"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Oldest unpublished event (seconds)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aether-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(aether_outbox_oldest_seconds)",
+          "legendFormat": "oldest outbox"
         }
       ]
     }

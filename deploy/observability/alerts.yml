@@ -1,0 +1,24 @@
+groups:
+  - name: aether-queues
+    rules:
+      - alert: AetherOutboxStalled
+        expr: aether_outbox_oldest_seconds > 60
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Oldest unpublished event is older than 60 seconds
+      - alert: AetherQueueCollectionFailed
+        expr: aether_queue_collection_success == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Workflow cannot collect database queue metrics
+      - alert: AetherWorkflowScrapeUnavailable
+        expr: up{job="workflow"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Workflow metrics endpoint is unavailable

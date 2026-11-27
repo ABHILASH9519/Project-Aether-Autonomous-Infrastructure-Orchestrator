@@ -7,6 +7,8 @@ for i in {1..45}; do
     curl -fsS http://localhost:8081/metrics | grep -F 'aether_http_requests_total'
     curl -fsS http://localhost:8082/metrics | grep -F 'aether_http_inflight_requests'
     curl -fsS http://localhost:3000/api/dashboards/uid/aether-http | jq -e '.dashboard.uid == "aether-http"'
+    curl -fsS http://localhost:8082/metrics | grep -Fx 'aether_queue_collection_success 1'
+    curl -fsS http://localhost:9090/api/v1/rules | jq -e '[.data.groups[].rules[].name] | index("AetherOutboxStalled") != null' >/dev/null
     exit 0
   fi
   sleep 2
