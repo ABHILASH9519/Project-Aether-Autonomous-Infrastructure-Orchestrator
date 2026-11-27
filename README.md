@@ -520,11 +520,11 @@ The Helm chart includes a default-deny ingress policy with explicit backend allo
 
 *Illustrative curves only, not CI measurements or live Grafana screenshots. The committed Grafana dashboard contains HTTP, pending-work and oldest-outbox panels; the dashboard also includes the failed-job count and new percentile panels.*
 
-Workflow metrics now expose durable queue depth, oldest unpublished age and remediation failure counts, with explicit collection health. Grafana includes queue panels and Prometheus evaluates stalled-outbox and unavailable-collector alerts. [Design and limits](docs/architecture/queue-observability.md). Alertmanager notification delivery is not configured; [queue monitoring CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064895229). New histogram verification pending.
+Workflow metrics now expose durable queue depth, oldest unpublished age and remediation failure counts, with explicit collection health. Grafana includes queue panels and Prometheus evaluates stalled-outbox and unavailable-collector alerts. [Design and limits](docs/architecture/queue-observability.md). Alertmanager notification delivery is not configured; [queue monitoring CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064895229). Histogram integration subsequently passed.
 
 ### Latency distribution
 
-HTTP request latency is now exported as a cumulative Prometheus histogram, with fixed buckets and bounded status-class labels. Grafana adds p50/p95/p99 estimates and historical failed-job count. Percentiles are estimates from buckets, not exact per-request measurements. New histogram tests and CI checks are committed; no benchmark results are claimed.
+HTTP request latency is now exported as a cumulative Prometheus histogram, with fixed buckets and bounded status-class labels. Grafana adds p50/p95/p99 estimates and historical failed-job count. Percentiles are estimates from buckets, not exact per-request measurements. Histogram integration passed in [run 46065272531](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065272531); no benchmark results are claimed.
 
 ## Immutable image delivery
 
@@ -541,3 +541,16 @@ flowchart LR
 ```
 
 GitOps CI now builds, pushes and resolves an image digest through a disposable local registry. Argo CD deploys the exact digest and tests all six workloads. Default Helm remains compatible with local preloaded images. See [image delivery design](docs/architecture/image-delivery.md). New registry CI pending; no external registry publication is performed.
+
+## Performance testing
+
+```mermaid
+flowchart LR
+ Load[Bounded Go load generator] --> Ingest[HTTP ingestion]
+ Ingest --> Kafka --> Consumer --> DB[(Incident projection)]
+ DB --> Check[Verify all events projected]
+ Ingest --> Report[Measured p50 / p95 / p99]
+ Check --> Report
+```
+
+Run `make load` against a ready local stack. The Go generator measures actual HTTP response latency and verifies the event count; CI uploads the JSON report. This is a bounded smoke benchmark, not a throughput or production SLO claim. See [load test runbook](docs/runbooks/load-testing.md). New CI pending.
