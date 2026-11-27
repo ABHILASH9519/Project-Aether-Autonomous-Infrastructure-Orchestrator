@@ -2,7 +2,7 @@
   "uid": "aether-http",
   "title": "AETHER / HTTP operations",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "10s",
   "time": {
     "from": "now-15m",
@@ -147,6 +147,60 @@
           "refId": "A",
           "expr": "max(aether_outbox_oldest_seconds)",
           "legendFormat": "oldest outbox"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "HTTP latency percentiles (seconds)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aether-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (job,le) (rate(aether_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{job}} p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (job,le) (rate(aether_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{job}} p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (job,le) (rate(aether_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{job}} p99"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Failed remediation jobs (historical)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aether-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(aether_remediation_failed)",
+          "legendFormat": "failed jobs"
         }
       ]
     }

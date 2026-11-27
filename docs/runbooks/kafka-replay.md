@@ -8,4 +8,4 @@ Run only in a disposable local Compose stack with the workflow profile and expor
 bash tests/kafka-replay-smoke.sh
 ```
 
-This is a duplicate-record/restart test, not a forced offset reset or a crash precisely between database commit and offset commit. It does not assert exactly-once broker delivery. The separate PostgreSQL concurrency test races 32 writes representing eight distinct event IDs and checks the projection and outbox cardinality. New CI verification pending.
+This is a duplicate-record/restart test, not a forced offset reset or a crash precisely between database commit and offset commit. It does not assert exactly-once broker delivery. The separate PostgreSQL concurrency test races 32 writes representing eight distinct event IDs and checks the projection and outbox cardinality. Verified in [Event fabric CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46064765194).

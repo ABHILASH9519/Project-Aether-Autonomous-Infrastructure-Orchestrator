@@ -9,6 +9,8 @@ for i in {1..45}; do
     curl -fsS http://localhost:3000/api/dashboards/uid/aether-http | jq -e '.dashboard.uid == "aether-http"'
     curl -fsS http://localhost:8082/metrics | grep -Fx 'aether_queue_collection_success 1'
     curl -fsS http://localhost:9090/api/v1/rules | jq -e '[.data.groups[].rules[].name] | index("AetherOutboxStalled") != null' >/dev/null
+    curl -fsS http://localhost:8081/metrics | grep -F 'aether_http_request_duration_seconds_bucket{status_class="2xx",le="+Inf"}'
+    curl -fsS http://localhost:3000/api/dashboards/uid/aether-http | jq -e '[.dashboard.panels[].id] | index(7) != null and index(8) != null' >/dev/null
     exit 0
   fi
   sleep 2
