@@ -292,3 +292,7 @@ An ordered, checksummed [migration ledger](docs/architecture/migrations.md) now 
 ## Dependency-aware readiness
 
 Ingest and workflow expose `/readyz` separately from process liveness `/healthz`. Ingest checks a Kafka partition leader and optional Redis; workflow checks PostgreSQL and an OPA decision. Kubernetes removes unready API pods from Service endpoints without restarting a healthy process solely because a dependency is down. The outage drills assert liveness remains available and readiness returns 503. Readiness is a point-in-time sample, not a guarantee of all partitions or future request success. CI verification pending.
+
+## Kafka replay safety
+
+A new [consumer restart and duplicate-event drill](docs/runbooks/kafka-replay.md) verifies a replayed event has only one inbox/outbox effect. PostgreSQL concurrency coverage also races 32 writes across eight unique IDs and checks the incident projection. These are targeted at-least-once delivery invariants; new CI verification pending.
