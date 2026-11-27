@@ -546,6 +546,10 @@ GitOps CI now builds, pushes and resolves an image digest through a disposable l
 
 ## Performance testing
 
+![Measured CI latency percentiles](docs/architecture/visuals/measured-ci-latency.svg)
+
+[Raw measured report](docs/benchmarks/ci-46066048451.json) · [CI source](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46066048451). The 40-event, four-worker smoke workload accepted and projected all events. These are measured client response times on that CI runner, not production capacity.
+
 ```mermaid
 flowchart LR
  Load[Bounded Go load generator] --> Ingest[HTTP ingestion]
@@ -555,7 +559,7 @@ flowchart LR
  Check --> Report
 ```
 
-Run `make load` against a ready local stack. The Go generator measures actual HTTP response latency and verifies the event count; CI uploads the JSON report. This is a bounded smoke benchmark, not a throughput or production SLO claim. See [load test runbook](docs/runbooks/load-testing.md). New CI pending.
+Run `make load` against a ready local stack. The Go generator measures actual HTTP response latency and verifies the event count; CI uploads the JSON report. This is a bounded smoke benchmark, not a throughput or production SLO claim. See [load test runbook](docs/runbooks/load-testing.md). The initial load and projection test passed in the linked run.
 
 ## Supply-chain security evidence
 
