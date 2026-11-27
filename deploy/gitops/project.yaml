@@ -17,3 +17,4 @@ spec:
     - {group: "", kind: PersistentVolumeClaim}
     - {group: apps, kind: Deployment}
     - {group: batch, kind: Job}
+    - {group: networking.k8s.io, kind: NetworkPolicy}

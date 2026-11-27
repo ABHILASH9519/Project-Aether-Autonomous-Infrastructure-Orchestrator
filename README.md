@@ -296,3 +296,7 @@ Ingest and workflow expose `/readyz` separately from process liveness `/healthz`
 ## Kafka replay safety
 
 A new [consumer restart and duplicate-event drill](docs/runbooks/kafka-replay.md) verifies a replayed event has only one inbox/outbox effect. PostgreSQL concurrency coverage also races 32 writes across eight unique IDs and checks the incident projection. These are targeted at-least-once delivery invariants; new CI verification pending.
+
+## Kubernetes network isolation
+
+The Helm chart includes a default-deny ingress policy with explicit backend allowlists. Ingest/workflow remain reachable on their API ports. A dedicated smoke test checks unauthorized pod access against actual ready backend IPs, while the ordinary workflow tests exercise permitted connections. Requires a NetworkPolicy-capable CNI; egress is not restricted. See [network design](docs/architecture/network-isolation.md). CI verification pending.

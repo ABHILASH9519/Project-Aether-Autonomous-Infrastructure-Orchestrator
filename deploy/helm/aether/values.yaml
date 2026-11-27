@@ -17,3 +17,7 @@ persistence:
   storageClassName: ""
   postgresSize: 2Gi
   kafkaSize: 2Gi
+
+# Requires a NetworkPolicy-capable CNI; verified separately in kind CI.
+networkPolicy:
+  enabled: true

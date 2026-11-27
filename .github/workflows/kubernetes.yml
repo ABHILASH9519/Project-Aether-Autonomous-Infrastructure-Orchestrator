@@ -1,7 +1,7 @@
 name: Kubernetes lab
 on:
   push:
-    paths: ["deploy/helm/**", "deploy/gitops/**", "deploy/policy/**", "services/event-fabric/**", "tests/kubernetes-smoke.sh", "tests/kubernetes-persistence-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/kubernetes.yml"]
+    paths: ["deploy/helm/**", "deploy/gitops/**", "deploy/policy/**", "services/event-fabric/**", "tests/kubernetes-smoke.sh", "tests/kubernetes-network-smoke.sh", "tests/kubernetes-persistence-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/kubernetes.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +17,8 @@ jobs:
       - uses: helm/kind-action@v1.12.0
         with:
           cluster_name: aether
+          version: v0.30.0
+          node_image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
       - run: helm lint deploy/helm/aether
       - run: cmp deploy/policy/workflow.rego deploy/helm/aether/files/workflow.rego
       - run: docker build -t aether-event-fabric:local services/event-fabric
@@ -27,5 +29,6 @@ jobs:
           helm upgrade --install aether deploy/helm/aether -n aether
       - run: bash tests/kubernetes-smoke.sh
       - run: bash tests/kubernetes-persistence-smoke.sh
+      - run: bash tests/kubernetes-network-smoke.sh
       - if: always()
         run: kubectl -n aether get pods,jobs,pvc,events

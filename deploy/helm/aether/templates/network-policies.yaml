@@ -1,0 +1,46 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+{{- range $name, $port := dict "ingest" 8081 "workflow" 8082 }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}-api
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ $name }}
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - {protocol: TCP, port: {{ $port }}}
+---
+{{- end }}
+{{- range $name, $cfg := dict "postgres" (dict "port" 5432 "clients" (list "consumer" "relay" "workflow" "executor")) "redis" (dict "port" 6379 "clients" (list "ingest")) "kafka" (dict "port" 29092 "clients" (list "ingest" "consumer" "relay" "kafka-topics" "kafka")) "opa" (dict "port" 8181 "clients" (list "workflow")) "fixture" (dict "port" 8083 "clients" (list "executor")) }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}-allow-clients
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ $name }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: {{ $cfg.clients | toJson }}
+      ports:
+        - {protocol: TCP, port: {{ $cfg.port }}}
+---
+{{- end }}
+{{- end }}
