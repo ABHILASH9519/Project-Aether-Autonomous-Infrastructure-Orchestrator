@@ -1,9 +1,9 @@
 name: Event fabric
 on:
   push:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
   pull_request:
-    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "tests/event-fabric-smoke.sh", "tests/workflow-smoke.sh", "tests/execution-smoke.sh", "tests/cloud-evidence-smoke.sh", "tests/postgres-restore-smoke.sh", "tests/policy-outage-smoke.sh", "tests/redis-outage-smoke.sh", "tests/observability-smoke.sh", "tests/tracing-smoke.sh", "deploy/observability/**", "deploy/policy/**", ".github/workflows/event-fabric.yml"]
 permissions:
   contents: read
 jobs:
@@ -62,6 +62,7 @@ jobs:
       - run: bash tests/workflow-smoke.sh
       - run: bash tests/execution-smoke.sh
       - run: bash tests/cloud-evidence-smoke.sh
+      - run: bash tests/postgres-restore-smoke.sh
       - run: bash tests/policy-outage-smoke.sh
       - run: bash tests/redis-outage-smoke.sh
       - run: bash tests/observability-smoke.sh
