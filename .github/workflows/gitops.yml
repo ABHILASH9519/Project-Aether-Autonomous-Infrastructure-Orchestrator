@@ -32,7 +32,18 @@ jobs:
         run: |
           kubectl create namespace argocd
           kubectl apply -n argocd --server-side --force-conflicts -f "https://raw.githubusercontent.com/argoproj/argo-cd/$ARGOCD_VERSION/manifests/install.yaml"
-          kubectl wait --for=condition=Established crd/applications.argoproj.io crd/appprojects.argoproj.io --timeout=120s
+          # Newly created CRDs may temporarily have no status.conditions.
+          for crd in applications.argoproj.io appprojects.argoproj.io; do
+            established=false
+            for i in {1..60}; do
+              if kubectl get crd "$crd" -o json | jq -e 'any(.status.conditions[]?; .type == "Established" and .status == "True")' >/dev/null; then
+                established=true
+                break
+              fi
+              sleep 2
+            done
+            test "$established" = true
+          done
           kubectl -n argocd rollout status deployment/argocd-repo-server --timeout=300s
           kubectl -n argocd rollout status statefulset/argocd-application-controller --timeout=300s
       - name: Bootstrap namespace and GitOps application
