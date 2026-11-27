@@ -21,17 +21,12 @@ jobs:
       - name: Resolve and verify Go module inventory
         working-directory: services/event-fabric
         run: |
-          go mod tidy
+          go mod tidy -diff
+          go mod download
           go mod verify
           mkdir -p "$RUNNER_TEMP/aether-evidence"
           cp go.mod go.sum "$RUNNER_TEMP/aether-evidence/"
           go list -mod=readonly -m -json all > "$RUNNER_TEMP/aether-evidence/go-modules.json"
-          echo 'BEGIN AETHER GO.MOD'
-          cat go.mod
-          echo 'END AETHER GO.MOD'
-          echo 'BEGIN AETHER GO.SUM'
-          cat go.sum
-          echo 'END AETHER GO.SUM'
       - name: Build source-revision-labeled image
         run: |
           docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" -t aether-event-fabric:scan services/event-fabric
