@@ -14,3 +14,5 @@ flowchart LR
 ```
 
 The registry binds only to host loopback and is attached to the disposable kind Docker network; containerd maps localhost:5001 to that registry following the [kind local registry guide](https://kind.sigs.k8s.io/docs/user/local-registry/). It has no authentication or TLS and must never be publicly exposed. CI removes it afterward. No GHCR publication, external credentials, release tags or public artifact promotion are performed. The default Helm path still uses the preloaded local image. Digest pinning establishes immutable deployment identity, not bit-for-bit reproducibility; base image digests and full dependency lock verification remain future work. CI verification pending.
+
+Registry lookup accepts both OCI/Docker indexes and single-image manifests and verifies the downloaded bytes against the registry-reported SHA-256. The first registry CI run failed after a successful push because its media-type negotiation was too narrow; corrected run pending.

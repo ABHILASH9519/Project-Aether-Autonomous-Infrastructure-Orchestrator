@@ -542,7 +542,7 @@ flowchart LR
 
 ```
 
-GitOps CI now builds, pushes and resolves an image digest through a disposable local registry. Argo CD deploys the exact digest and tests all six workloads. Default Helm remains compatible with local preloaded images. See [image delivery design](docs/architecture/image-delivery.md). New registry CI pending; no external registry publication is performed.
+GitOps CI now builds, pushes and resolves an image digest through a disposable local registry. Argo CD deploys the exact digest and tests all six workloads. Default Helm remains compatible with local preloaded images. See [image delivery design](docs/architecture/image-delivery.md). The first registry CI push succeeded but manifest negotiation failed; lookup now handles indexes and single-image manifests and verifies the returned SHA-256. Corrected CI pending. No external registry publication is performed.
 
 ## Performance testing
 
