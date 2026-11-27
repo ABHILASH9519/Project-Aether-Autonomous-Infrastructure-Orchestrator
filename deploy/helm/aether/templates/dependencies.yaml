@@ -39,7 +39,12 @@ spec:
             - {name: data, mountPath: /var/lib/postgresql/data}
       volumes:
         - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: postgres-data
+          {{- else }}
           emptyDir: {}
+          {{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -120,7 +125,12 @@ spec:
             - {name: data, mountPath: /tmp/kraft-combined-logs}
       volumes:
         - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: kafka-data
+          {{- else }}
           emptyDir: {}
+          {{- end }}
 ---
 apiVersion: batch/v1
 kind: Job

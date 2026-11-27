@@ -14,5 +14,6 @@ spec:
   namespaceResourceWhitelist:
     - {group: "", kind: Service}
     - {group: "", kind: ConfigMap}
+    - {group: "", kind: PersistentVolumeClaim}
     - {group: apps, kind: Deployment}
     - {group: batch, kind: Job}

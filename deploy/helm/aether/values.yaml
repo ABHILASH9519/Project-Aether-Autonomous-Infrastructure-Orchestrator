@@ -10,3 +10,10 @@ resources:
   limits:
     cpu: "1"
     memory: 256Mi
+
+# Local dynamic provisioning; use a fresh namespace when changing storage mode.
+persistence:
+  enabled: true
+  storageClassName: ""
+  postgresSize: 2Gi
+  kafkaSize: 2Gi

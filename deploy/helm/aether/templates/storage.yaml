@@ -1,0 +1,20 @@
+{{- if .Values.persistence.enabled }}
+{{- range $name, $size := dict "postgres" .Values.persistence.postgresSize "kafka" .Values.persistence.kafkaSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}-data
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with $.Values.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $size | quote }}
+{{- end }}
+{{- end }}
