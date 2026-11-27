@@ -97,7 +97,6 @@ services:
     entrypoint: ["/relay"]
     environment:
       AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
-      AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       KAFKA_BROKERS: kafka:29092
     restart: on-failure
@@ -118,7 +117,6 @@ services:
       context: ../../services/event-fabric
     entrypoint: ["/workflow"]
     environment:
-      AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       AETHER_OPERATOR_TOKEN: ${AETHER_OPERATOR_TOKEN:-}
@@ -174,7 +172,6 @@ services:
       context: ../../services/event-fabric
     entrypoint: ["/executor"]
     environment:
-      AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       AETHER_OTLP_ENDPOINT: ${AETHER_OTLP_ENDPOINT:-}
       DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
       LAB_FIXTURE_URL: http://fixture:8083

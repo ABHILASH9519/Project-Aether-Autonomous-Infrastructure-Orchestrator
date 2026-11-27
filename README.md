@@ -590,25 +590,3 @@ flowchart LR
 ```
 
 Two independent causal traces now cross durable PostgreSQL queue boundaries. No baggage, credentials or event payload is persisted as tracing metadata. New Jaeger smoke tests check the relay and execution spans. Fixture HTTP and policy spans are not yet instrumented. See [trace design](docs/architecture/tracing.md).
-
-### Durable outbox trace
-
-```mermaid
-flowchart LR
- HTTP[HTTP ingest span] --> Kafka --> Consumer[Consumer span]
- Consumer --> Outbox[(PostgreSQL traceparent)] --> Relay[Outbox producer span]
- Relay --> Observed[Observed Kafka event]
- Relay -. OTLP .-> Jaeger
-```
-
-Migration 2 adds traceparent columns without rewriting the original schema. The relay continues persisted context, with no baggage or payload used as trace metadata. New smoke verification pending.
-
-### Durable execution trace
-
-```mermaid
-flowchart LR
- Command[Workflow transition span] --> Job[(Job traceparent)] --> Executor[Remediation attempt span]
- Executor -. OTLP .-> Jaeger
-```
-
-The outbox and workflow command traces are independent causal paths, not a single incident-wide trace. The worker resumes the job's persisted W3C context. No baggage, credentials or event payload is persisted as tracing metadata. New Jaeger smoke tests check relay and execution spans; fixture HTTP and policy spans remain uninstrumented.
