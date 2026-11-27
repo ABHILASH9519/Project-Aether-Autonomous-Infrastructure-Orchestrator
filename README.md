@@ -590,3 +590,7 @@ flowchart LR
 ```
 
 Two independent causal traces now cross durable PostgreSQL queue boundaries. No baggage, credentials or event payload is persisted as tracing metadata. New Jaeger smoke tests check the relay and execution spans. Fixture HTTP and policy spans are not yet instrumented. See [trace design](docs/architecture/tracing.md).
+
+### Security remediation baseline
+
+Container builders and Go CI now target Go 1.26.11, a supported security-patched release ([upstream release history](https://go.dev/doc/devel/release)). The module's minimum Go language version is unchanged. The scan emits deduplicated package/CVE triage and available fixed versions for follow-up upgrades. This is the first mitigation step, not a claim that all 189 earlier findings are resolved. The new build and scan must pass before measuring the improvement.

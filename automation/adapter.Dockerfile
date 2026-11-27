@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.26.11-alpine AS build
 WORKDIR /src
 COPY services/event-fabric/ .
 RUN go mod download && go mod verify && CGO_ENABLED=0 go build -mod=readonly -trimpath -o /fixture ./cmd/fixture

@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.26.11-alpine AS build
 WORKDIR /src
 COPY . .
 RUN go mod download && go mod verify && CGO_ENABLED=0 go build -mod=readonly -o /ingest ./cmd/ingest && CGO_ENABLED=0 go build -mod=readonly -o /consumer ./cmd/consumer && CGO_ENABLED=0 go build -mod=readonly -o /relay ./cmd/relay && CGO_ENABLED=0 go build -mod=readonly -o /workflow ./cmd/workflow && CGO_ENABLED=0 go build -mod=readonly -o /executor ./cmd/executor && CGO_ENABLED=0 go build -mod=readonly -o /fixture ./cmd/fixture
