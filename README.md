@@ -686,3 +686,5 @@ flowchart LR
 ```
 
 The cloud smoke now checks automatic delivery, not a manual upload. LocalStack object storage is ephemeral; archive metadata records historical delivery, not continuing retention.
+
+Authenticated `GET /api/v1/incidents/{id}/archive` exposes archive delivery state, attempts and confirmed digest. The cloud outage drill pauses the emulator, verifies the approved repair still resolves and evidence remains pending with a recorded retry, and verifies archive delivery after recovery. CI verification pending.

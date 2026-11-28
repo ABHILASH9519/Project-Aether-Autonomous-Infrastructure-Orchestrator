@@ -17,7 +17,12 @@ for i in {1..90}; do
 SELECT archive_sha256 FROM remediation_jobs WHERE correlation_id=:'id' AND archived_at IS NOT NULL;
 SQL
 )
-    if [[ "$stored" == "$digest" ]]; then echo "Automatic verified S3 archive: $key"; exit 0; fi
+    if [[ "$stored" == "$digest" ]]; then
+      curl -fsS -H "Authorization: Bearer $AETHER_OPERATOR_TOKEN" "http://127.0.0.1:8082/api/v1/incidents/$AETHER_EXECUTION_ID/archive" | jq -e --arg digest "$digest" '.state=="archived" and .sha256==$digest and .attempts>=1 and .archived_at!=null'
+      test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8082/api/v1/incidents/$AETHER_EXECUTION_ID/archive")" = 401
+      echo "Automatic verified S3 archive: $key"
+      exit 0
+    fi
   fi
   sleep 2
 done

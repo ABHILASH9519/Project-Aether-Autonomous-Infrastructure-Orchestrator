@@ -7,6 +7,7 @@ import (
  "encoding/hex"
  "encoding/json"
  "errors"
+ "time"
 )
 
 type Evidence struct {
@@ -51,4 +52,24 @@ func (s Store) ArchiveOne(ctx context.Context, publish func(context.Context,Evid
  if err!=nil{return false,err}
  if err=tx.Commit();err!=nil{return false,err}
  return true,deliveryErr
+}
+
+type ArchiveStatus struct {
+ State string `json:"state"`
+ Attempts int64 `json:"attempts"`
+ SHA256 string `json:"sha256,omitempty"`
+ ArchivedAt *time.Time `json:"archived_at,omitempty"`
+}
+func(s Store) ArchiveStatus(ctx context.Context,id string)(ArchiveStatus,error){
+ var a ArchiveStatus
+ var status string
+ var at sql.NullTime
+ err:=s.DB.QueryRowContext(ctx,"SELECT status,archive_attempts,archive_sha256,archived_at FROM remediation_jobs WHERE correlation_id=$1",id).Scan(&status,&a.Attempts,&a.SHA256,&at)
+ if err!=nil{return a,err}
+ switch{
+ case at.Valid:a.State="archived";a.ArchivedAt=&at.Time
+ case status=="succeeded"||status=="failed":a.State="pending"
+ default:a.State="not_eligible"
+ }
+ return a,nil
 }

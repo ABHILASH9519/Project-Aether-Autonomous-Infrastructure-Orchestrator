@@ -6,6 +6,7 @@ import (
  "net/http"
  "net/http/httptest"
  "strings"
+ "sync"
  "testing"
  "time"
 
@@ -13,9 +14,11 @@ import (
 )
 func TestLocalStackPublish(t *testing.T){
  for _,corrupt:=range []bool{false,true}{
+  var mu sync.Mutex
   var exists bool
   var saved []byte
   s:=httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+   mu.Lock();defer mu.Unlock()
    body,_:=io.ReadAll(r.Body)
    if !strings.HasPrefix(r.Header.Get("Authorization"),"AWS4-HMAC-SHA256 Credential=test/20261128/us-east-1/s3/aws4_request,")||r.Header.Get("X-Amz-Content-Sha256")!=digest(body){t.Error("missing local request signature")}
    if r.URL.Path=="/"+bucket{
