@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: {{ $name }}
 spec:
-  replicas: 1
+  replicas: {{ if $cfg.lab }}1{{ else }}{{ index $.Values.replicas $name }}{{ end }}
   selector:
     matchLabels:
       app: {{ $name }}

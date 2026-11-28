@@ -692,3 +692,7 @@ Authenticated `GET /api/v1/incidents/{id}/archive` exposes archive delivery stat
 ## Fixture transport identity
 
 The optional [mutual TLS overlay](docs/architecture/fixture-mtls.md) uses TLS 1.3, a private lab CA, hostname verification and the executor URI SAN. A dedicated integration workflow tests approved repair and rejects missing/wrong client certificates. The base local lab remains plaintext; the overlay is not cluster-wide TLS. New CI pending.
+
+## Application scaling and worker recovery
+
+The Helm chart now allows independently configured replicas for five application processes, retaining a singleton fixture. A dedicated Kubernetes drill scales consumer, relay and executor to two replicas, deletes one of each, runs a full approved repair and checks one durable incident effect. See [application scaling](docs/architecture/application-scaling.md). Single-node Kafka/PostgreSQL remain a limitation; new CI pending.

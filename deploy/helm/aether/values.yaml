@@ -22,3 +22,11 @@ persistence:
 # Requires a NetworkPolicy-capable CNI; verified separately in kind CI.
 networkPolicy:
   enabled: true
+
+# Application replicas; the fixture and infrastructure remain single-instance.
+replicas:
+  ingest: 1
+  consumer: 1
+  relay: 1
+  workflow: 1
+  executor: 1

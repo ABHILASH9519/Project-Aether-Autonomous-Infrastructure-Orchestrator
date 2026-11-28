@@ -34,6 +34,44 @@
           ]
         }
       }
+    },
+    "replicas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ingest",
+        "consumer",
+        "relay",
+        "workflow",
+        "executor"
+      ],
+      "properties": {
+        "ingest": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "consumer": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "relay": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "workflow": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "executor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        }
+      }
     }
   }
 }
