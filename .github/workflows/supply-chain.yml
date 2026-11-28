@@ -42,6 +42,11 @@ jobs:
           jq '[.Results[]?.Vulnerabilities[]?] | group_by(.Severity) | map({severity:.[0].Severity,count:length})' "$RUNNER_TEMP/aether-evidence/vulnerabilities.json"
           jq '[.Results[]? as $r | $r.Vulnerabilities[]? | {target:$r.Target,type:$r.Type,id:.VulnerabilityID,package:.PkgName,installed:.InstalledVersion,fixed:(.FixedVersion // ""),severity:.Severity}] | unique_by([.type,.package,.installed,.id]) | sort_by(.package,.id)' "$RUNNER_TEMP/aether-evidence/vulnerabilities.json" > "$RUNNER_TEMP/aether-evidence/triage.json"
           jq 'group_by([.type,.package,.installed]) | map({type:.[0].type,package:.[0].package,installed:.[0].installed,critical:map(select(.severity=="CRITICAL"))|length,high:map(select(.severity=="HIGH"))|length,available_fixes:map(.fixed)|map(select(length>0))|unique})' "$RUNNER_TEMP/aether-evidence/triage.json" | tee "$RUNNER_TEMP/aether-evidence/package-summary.json"
+      - name: Enforce application image severity gate
+        run: |
+          report="$RUNNER_TEMP/aether-evidence/vulnerabilities.json"
+          jq -e '(.Results | type == "array" and length > 0) and any(.Results[]; .Type == "gobinary")' "$report"
+          jq -e '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH" or .Severity == "CRITICAL")] | length == 0' "$report"
       - if: always()
         uses: actions/upload-artifact@v4
         with:

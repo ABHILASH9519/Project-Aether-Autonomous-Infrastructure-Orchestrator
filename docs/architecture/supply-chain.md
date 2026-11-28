@@ -11,3 +11,7 @@ Build and test toolchains are updated from Go 1.23 to the supported Go 1.26.11 s
 ## Dependency remediation candidate
 
 [Run 46138764858](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138764858) resolved scanner-recommended upgrades, verified module checksums, and passed Go unit tests, vet and command builds. The exact go.mod and go.sum from that runner are now committed. This updates compression, OpenTelemetry, x/net, x/text and gRPC, with transitive versions selected by Go. Full integration and a new image scan are required before claiming vulnerability resolution. The candidate job does not have a database service and therefore skips database-dependent tests.
+
+## Enforced application-image gate
+
+The [post-upgrade scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883611) detected seven Go binaries and Debian 12 packages and reported no HIGH or CRITICAL findings in its vulnerability report. The new gate requires a nonempty scanner result set with Go-binary coverage, and fails on any HIGH or CRITICAL entry. Reports are retained even when the gate fails. This supersedes the earlier report-only policy. The database evolves over time, and other images, lower severities, exploitability, configuration and runtime behavior are outside this gate. The minimum event-fabric Go version is now 1.26.0; the pinned build toolchain remains 1.26.11. New gate verification pending.

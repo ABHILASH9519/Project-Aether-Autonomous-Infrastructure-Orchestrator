@@ -724,3 +724,7 @@ The Helm chart now allows independently configured replicas for five application
 The [security dependency candidate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138764858) passed module verification, Go tests, vet and build. The exact generated module files are committed. Full integration and vulnerability rescan pending; the report-only scan is not yet an enforcing security gate.
 
 Worker recovery passed once, then a later run exposed a transient 503 after pod deletion. The recovery drill now tests bounded same-ID publication retries while retaining the one-effect invariant; normal smoke tests remain strict. Corrected CI pending.
+
+### Application-image security gate
+
+[Post-upgrade scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883611) reported **zero HIGH and CRITICAL findings** for the event-fabric container. CI now enforces that threshold, requires Go-binary scan coverage and retains the SBOM and vulnerability reports even on failure. The gate does not scan every dependency service image or establish production security. Event-fabric requires Go 1.26+; CI builds use Go 1.26.11. New gate CI pending.
