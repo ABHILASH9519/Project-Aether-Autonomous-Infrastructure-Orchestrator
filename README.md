@@ -11,12 +11,13 @@
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
 export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 make up
+make demo
 make smoke
 make automation
 make down
 ```
 
-See [local demo runbook](docs/runbooks/local-demo.md) for prerequisites, limitations and cleanup. See the verification matrix below for the last successful runs and remaining checks. Do not expose local ports publicly.
+For a concise recorded walkthrough, use the [operator demo](docs/runbooks/operator-demo.md). The CLI demonstrates a real synthetic repair and the ordered audit trail through actual APIs. See [local demo runbook](docs/runbooks/local-demo.md) for prerequisites, limitations and cleanup. See the verification matrix below for the last successful runs and remaining checks. Do not expose local ports publicly.
 
 ## Why this exists
 
@@ -629,3 +630,23 @@ flowchart TD
 ### Auditable operator experience
 
 Authenticated `GET /api/v1/incidents/{id}/audit?after=0` returns the ordered transition history, including actor role, previous/next state, version and timestamp. Pages are limited to 100 entries; `next_after` is a continuation cursor. The execution smoke test verifies the six expected transitions and credential enforcement. New CI verification pending. Roles identify shared lab credentials, not individual people.
+
+### Operator CLI
+
+```mermaid
+sequenceDiagram
+ participant CLI as aetherctl
+ participant I as Ingest API
+ participant W as Workflow API
+ participant E as Executor
+ CLI->>I: Synthetic alert
+ CLI->>W: Check incident and blocked early execution
+ CLI->>W: Operator acknowledge / request approval
+ CLI->>W: Approver authorize
+ CLI->>W: Operator execute_lab
+ W->>E: Durable approved job
+ E->>W: Persist verified evidence
+ CLI->>W: Read resolved state, job and audit
+```
+
+Run `make demo` after both local API readiness checks pass. The CLI uses loopback-only endpoints, distinct role credentials and explicit lab approval. It never executes arbitrary host commands. New demo integration CI pending.

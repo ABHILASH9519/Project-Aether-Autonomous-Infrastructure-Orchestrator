@@ -81,6 +81,17 @@ jobs:
         with:
           go-version: "1.26.11"
           cache: false
+      - name: Operator CLI demo and durable audit
+        working-directory: services/event-fabric
+        run: |
+          set -o pipefail
+          go run -mod=readonly ./cmd/aetherctl demo -approve-lab | tee "$RUNNER_TEMP/aether-demo.txt"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aether-operator-demo
+          path: ${{ runner.temp }}/aether-demo.txt
+          if-no-files-found: ignore
       - name: Measure bounded HTTP load and verify projection
         working-directory: services/event-fabric
         run: |

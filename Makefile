@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 COMPOSE := docker compose -f deploy/compose/events.yaml --profile workflow --profile observability --profile cloud
-.PHONY: help up down logs test smoke automation helm-lint load
+.PHONY: help up down logs test smoke automation helm-lint load demo
 help:
-	@printf '%s\n' 'make up         start local full-stack demo (export both tokens first)' 'make smoke      exercise ingestion, approvals, execution, monitoring and cloud' 'make test       run Go tests (database integrations require test service env)' 'make automation run isolated Ansible/Puppet drift tests' 'make helm-lint  lint local Kubernetes chart' 'make down       stop local stack, retaining named volumes' 'make load       run bounded local load and projection test'
+	@printf '%s\n' 'make up         start local full-stack demo (export both tokens first)' 'make smoke      exercise ingestion, approvals, execution, monitoring and cloud' 'make test       run Go tests (database integrations require test service env)' 'make automation run isolated Ansible/Puppet drift tests' 'make helm-lint  lint local Kubernetes chart' 'make down       stop local stack, retaining named volumes' 'make load       run bounded local load and projection test' 'make demo       run explicitly approved synthetic repair demo'
 up:
 	@test -n "$$AETHER_OPERATOR_TOKEN" && test -n "$$AETHER_APPROVER_TOKEN" || { echo "Export distinct operator and approver tokens first"; exit 1; }
 	AETHER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces $(COMPOSE) up -d --build
@@ -28,3 +28,6 @@ helm-lint:
 
 load:
 	cd services/event-fabric && go run ./cmd/loadtest -requests 40 -concurrency 4
+
+demo:
+	cd services/event-fabric && go run -mod=readonly ./cmd/aetherctl demo -approve-lab
