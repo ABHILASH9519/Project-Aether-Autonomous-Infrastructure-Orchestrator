@@ -18,4 +18,4 @@ AETHER converts synthetic infrastructure events into durable, policy-controlled 
 - [Go 1.26.11 supply-chain report](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671)
 - [Measured 40-event smoke workload](benchmarks/ci-46066048451.json): all 40 accepted and projected; p95 13.81 ms on one CI runner.
 
-These are historical successful runs at specific revisions, not a claim that every later commit is verified. The new CLI and audit endpoint are undergoing CI. Remaining vulnerabilities, production identities, TLS, high availability, and coordinated disaster recovery are outside the verified scope.
+These are historical successful runs at specific revisions, not a claim that every later commit is verified. The [CLI, audit endpoint and automatic S3 outage recovery passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803). Remaining vulnerabilities, production identities, TLS, high availability, and coordinated disaster recovery are outside the verified scope.

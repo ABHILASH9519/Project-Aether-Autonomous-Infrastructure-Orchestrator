@@ -650,7 +650,7 @@ flowchart TD
 
 ### Auditable operator experience
 
-Authenticated `GET /api/v1/incidents/{id}/audit?after=0` returns the ordered transition history, including actor role, previous/next state, version and timestamp. Pages are limited to 100 entries; `next_after` is a continuation cursor. The execution smoke test verifies the six expected transitions and credential enforcement. New CI verification pending. Roles identify shared lab credentials, not individual people.
+Authenticated `GET /api/v1/incidents/{id}/audit?after=0` returns the ordered transition history, including actor role, previous/next state, version and timestamp. Pages are limited to 100 entries; `next_after` is a continuation cursor. The execution smoke test verifies the six expected transitions and credential enforcement. [Audit integration passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803). Roles identify shared lab credentials, not individual people.
 
 ### Operator CLI
 
@@ -674,7 +674,7 @@ Run `make demo` after both local API readiness checks pass. The CLI uses loopbac
 
 ### Durable evidence delivery
 
-The next cloud milestone separates remediation completion from archive delivery. Migration 3 records retry and delivery metadata for terminal jobs, and a stable SHA-256 object key makes retries idempotent at the object-content level. [Design](docs/architecture/evidence-delivery.md). The Go archiver is wired into the Compose cloud profile and verifies actual uploaded bytes. New CI verification pending.
+The next cloud milestone separates remediation completion from archive delivery. Migration 3 records retry and delivery metadata for terminal jobs, and a stable SHA-256 object key makes retries idempotent at the object-content level. [Design](docs/architecture/evidence-delivery.md). The Go archiver is wired into the Compose cloud profile and verifies actual uploaded bytes. [Automatic delivery passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803).
 
 ```mermaid
 flowchart LR
@@ -687,12 +687,34 @@ flowchart LR
 
 The cloud smoke now checks automatic delivery, not a manual upload. LocalStack object storage is ephemeral; archive metadata records historical delivery, not continuing retention.
 
-Authenticated `GET /api/v1/incidents/{id}/archive` exposes archive delivery state, attempts and confirmed digest. The cloud outage drill pauses the emulator, verifies the approved repair still resolves and evidence remains pending with a recorded retry, and verifies archive delivery after recovery. CI verification pending.
+Authenticated `GET /api/v1/incidents/{id}/archive` exposes archive delivery state, attempts and confirmed digest. The cloud outage drill pauses the emulator, verifies the approved repair still resolves and evidence remains pending with a recorded retry, and verifies archive delivery after recovery. [Outage integration passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803).
 
 ## Fixture transport identity
+
+```mermaid
+flowchart LR
+ Executor[Go executor / client certificate] -->|TLS 1.3| Fixture[Fixture / server certificate]
+ CA[Dedicated lab CA] --> Executor
+ CA --> Fixture
+ Wrong[Missing or wrong client identity] -. rejected .-> Fixture
+```
 
 The optional [mutual TLS overlay](docs/architecture/fixture-mtls.md) uses TLS 1.3, a private lab CA, hostname verification and the executor URI SAN. A dedicated integration workflow tests approved repair and rejects missing/wrong client certificates. The base local lab remains plaintext; the overlay is not cluster-wide TLS. New CI pending.
 
 ## Application scaling and worker recovery
+
+```mermaid
+flowchart LR
+ Kafka --> C1[Consumer replica 1]
+ Kafka --> C2[Consumer replica 2]
+ C1 --> DB[(PostgreSQL)]
+ C2 --> DB
+ DB --> R1[Relay replica 1]
+ DB --> R2[Relay replica 2]
+ DB --> E1[Executor replica 1]
+ DB --> E2[Executor replica 2]
+ E1 --> Fixture[Singleton fixture]
+ E2 --> Fixture
+```
 
 The Helm chart now allows independently configured replicas for five application processes, retaining a singleton fixture. A dedicated Kubernetes drill scales consumer, relay and executor to two replicas, deletes one of each, runs a full approved repair and checks one durable incident effect. See [application scaling](docs/architecture/application-scaling.md). Single-node Kafka/PostgreSQL remain a limitation; new CI pending.
