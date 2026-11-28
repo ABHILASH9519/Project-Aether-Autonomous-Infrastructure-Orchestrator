@@ -6,7 +6,20 @@ id="${AETHER_EXECUTION_ID:-execution-$(date +%s)-$}"
 url="http://127.0.0.1:8082/api/v1/incidents/$id"
 auth="Authorization: Bearer $AETHER_OPERATOR_TOKEN"
 body=$(printf '{"event_id":"%s","event_type":"Infrastructure.Alert","schema_version":1,"occurred_at":"2026-01-01T00:00:00Z","source":"execution-smoke","correlation_id":"%s","payload":{}}' "$id" "$id")
-curl -fsS -H 'Content-Type: application/json' -d "$body" http://127.0.0.1:8081/api/v1/events
+# A publication timeout may mean the broker already accepted the record.
+# Retry only with the identical event ID/body, never a fresh event.
+attempts="${AETHER_INGEST_ATTEMPTS:-1}"
+[[ "$attempts" =~ ^[1-9][0-9]?$ ]] && (( attempts <= 10 ))
+accepted=false
+for ((n=1;n<=attempts;n++)); do
+  status=$(curl --max-time 12 -sS -o /tmp/aether-execution-response-$ -w '%{http_code}' -H 'Content-Type: application/json' -d "$body" http://127.0.0.1:8081/api/v1/events) || status=000
+  echo "Ingest attempt $n/$attempts: HTTP $status"
+  if [[ "$status" == 202 ]]; then accepted=true; break; fi
+  if [[ "$status" != 503 && "$status" != 000 ]]; then break; fi
+  if (( n < attempts )); then sleep 2; fi
+done
+if [[ "$accepted" != true ]]; then cat /tmp/aether-execution-response-$ >&2 || true; rm -f /tmp/aether-execution-response-$; exit 1; fi
+rm -f /tmp/aether-execution-response-$
 for i in {1..60}; do
   if curl -fsS -H "$auth" "$url" >/dev/null 2>&1; then break; fi
   sleep 2

@@ -29,7 +29,7 @@ for service in consumer relay executor; do
  test -n "$pod"
  kubectl -n "$ns" delete pod "$pod" --wait=false
 done
-bash tests/execution-smoke.sh
+AETHER_INGEST_ATTEMPTS=10 bash tests/execution-smoke.sh
 for service in consumer relay executor; do
  kubectl -n "$ns" rollout status deployment/"$service" --timeout=180s
  test "$(kubectl -n "$ns" get deployment "$service" -o jsonpath='{.status.readyReplicas}')" = 2

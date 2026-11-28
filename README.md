@@ -722,3 +722,5 @@ The Helm chart now allows independently configured replicas for five application
 ### Dependency remediation
 
 The [security dependency candidate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138764858) passed module verification, Go tests, vet and build. The exact generated module files are committed. Full integration and vulnerability rescan pending; the report-only scan is not yet an enforcing security gate.
+
+Worker recovery passed once, then a later run exposed a transient 503 after pod deletion. The recovery drill now tests bounded same-ID publication retries while retaining the one-effect invariant; normal smoke tests remain strict. Corrected CI pending.

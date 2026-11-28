@@ -33,3 +33,8 @@ jobs:
       - run: bash tests/kubernetes-worker-recovery-smoke.sh
       - if: always()
         run: kubectl -n aether get pods,jobs,pvc,events
+      - if: failure()
+        run: |
+          for app in ingest workflow consumer relay executor kafka postgres; do
+            kubectl -n aether logs -l app="$app" --all-containers --tail=100 --prefix --max-log-requests=10 || true
+          done
