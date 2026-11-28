@@ -1,9 +1,26 @@
 # AETHER
 ### Autonomous Event-driven Telemetry, Execution & Resilience
 
+[![Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/event-fabric.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/event-fabric.yml) [![Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/kubernetes.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/kubernetes.yml) [![GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/gitops.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/gitops.yml) [![Configuration management](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/automation.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/automation.yml) [![Supply chain](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/supply-chain.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/supply-chain.yml) [![Control API](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/control-api.yml/badge.svg?branch=main)](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/workflows/control-api.yml)
+
+[Architecture](#system-overview) · [Quick start](#quick-start-local-lab) · [Verification](#verification-matrix) · [Measured performance](#performance-testing) · [Operator demo](docs/runbooks/operator-demo.md)
+
 > **Status: integrated local engineering lab — durable workflows, policy gates, remediation, observability and GitOps.** AETHER is an experimental, local-first DevOps platform. Automated remediation is intentionally restricted to explicitly approved, allowlisted actions; this repository is not production-ready.
 
 **AETHER** is an open-source engineering project exploring how observable infrastructure events can become auditable, policy-gated operational workflows. It is built around a service-oriented control plane rather than a single dashboard.
+
+## What AETHER delivers
+
+| Capability | Implementation |
+| --- | --- |
+| Event-driven ingestion | Go + Kafka, Redis admission control, durable PostgreSQL inbox/outbox |
+| Safe remediation | OPA policy, distinct approval roles, optimistic version checks, bounded retries and verified synthetic fixtures |
+| Infrastructure automation | Ansible and Puppet reconciliation, Helm, kind, Argo CD drift recovery and immutable local OCI image delivery |
+| Observability | Prometheus histograms and alert rules, Grafana, Jaeger across durable queues |
+| Resilience | Duplicate-event suppression, dependency outage drills, retained PVCs and logical database restore |
+| Engineering evidence | Race tests, integration CI, measured load report, CycloneDX SBOM and vulnerability triage |
+
+**Verified baseline:** [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067786876) · [Immutable GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067787051) · [Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067477316) · [Security report](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671). New CLI and audit integration are undergoing separate verification. AETHER is a local lab, not a production automation product.
 
 ## Quick start (local lab)
 
@@ -11,9 +28,13 @@
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
 export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 make up
+# Wait for both APIs to report readiness.
+make ready
 make demo
+# Optional expanded integration and automation checks:
 make smoke
 make automation
+# Stop when finished (retains named volumes).
 make down
 ```
 
@@ -221,7 +242,7 @@ docker compose -f deploy/compose/events.yaml --profile workflow --profile observ
 - Grafana: http://localhost:3000 (local anonymous viewer, provisioned AETHER HTTP operations dashboard)
 - Metrics: http://localhost:8081/metrics and http://localhost:8082/metrics
 
-See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only; prior monitoring smoke tests passed. HTTP-to-Kafka OpenTelemetry tracing is now optional; worker metrics and alerts remain planned.
+See [admission design](docs/architecture/admission.md) and [observability design](docs/architecture/observability.md). Metrics do not contain request IDs or payloads. The optional monitoring profile is local only; prior monitoring smoke tests passed. HTTP-to-Kafka OpenTelemetry tracing is now optional; durable queue metrics, latency histograms and local alert rules are now included.
 
 ## Policy-based authorization
 
@@ -248,7 +269,7 @@ flowchart LR
  OPA -->|Deny / error| Rejected[403 / 503]
 ```
 
-Operators request approval and simulate; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. [Policy and outage integration CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45894817663). Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
+Operators acknowledge, request approval, simulate or queue an approved lab repair; approvers approve or reject. OPA denies unknown actions and live execution. See [policy architecture](docs/architecture/policy.md). Two distinct tokens are required for the workflow profile. [Policy and outage integration CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45894817663). Audit rows record the server-derived role. See the [local OPA outage drill](docs/runbooks/policy-outage.md) for fail-closed behavior and recovery.
 
 ## Durable lab execution
 
@@ -264,7 +285,7 @@ flowchart LR
  Worker -->|verified / retries exhausted| Audit[(Incident + audit)]
 ```
 
-The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). Inspect job evidence via authenticated `GET /api/v1/incidents/{id}/job`. Run `bash tests/execution-smoke.sh` with the workflow profile. Default fixture execution passed in run 45897898366; newer adapters require separate verification.
+The `execute_lab` action queues an approved job. A separate worker applies an idempotent repair to an isolated synthetic fixture and independently verifies the contents. Three recorded attempts are allowed. Fixture state is ephemeral; this is not real production infrastructure remediation. See [execution architecture](docs/architecture/execution.md). Inspect job evidence via authenticated `GET /api/v1/incidents/{id}/job`. Run `bash tests/execution-smoke.sh` with the workflow profile. Default fixture execution passed in run 45897898366; the approved Ansible/Puppet adapter passed in run 45898190166.
 
 ## Configuration management lab
 
@@ -594,7 +615,7 @@ flowchart LR
  Executor -. OTLP .-> Jaeger
 ```
 
-Two independent causal traces now cross durable PostgreSQL queue boundaries. No baggage, credentials or event payload is persisted as tracing metadata. New Jaeger smoke tests check the relay and execution spans. Fixture HTTP and policy spans are not yet instrumented. See [trace design](docs/architecture/tracing.md).
+Two independent causal traces now cross durable PostgreSQL queue boundaries. No baggage, credentials or event payload is persisted as tracing metadata. Jaeger smoke tests verified relay and execution spans in run 46067342592. Fixture HTTP and policy spans are not yet instrumented. See [trace design](docs/architecture/tracing.md).
 
 ### Security remediation baseline
 

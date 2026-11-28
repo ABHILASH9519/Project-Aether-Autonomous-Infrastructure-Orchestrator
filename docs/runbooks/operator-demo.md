@@ -6,8 +6,7 @@ Use a fresh local lab, with Go, Docker Compose, Make, OpenSSL, curl and jq avail
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
 export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 make up
-curl -f http://127.0.0.1:8081/readyz
-curl -f http://127.0.0.1:8082/readyz
+make ready
 make demo
 ```
 

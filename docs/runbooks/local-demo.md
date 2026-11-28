@@ -1,11 +1,13 @@
 # Local demo runbook
 
-Prerequisites: Docker with Compose v2, Bash, curl, jq, OpenSSL, Make and a Linux-compatible shell. First build downloads public images and dependencies. No paid cloud account is needed; local hardware and network access are required.
+Prerequisites: Go (CI uses 1.26.11) for the operator CLI and Docker with Compose v2, Bash, curl, jq, OpenSSL, Make and a Linux-compatible shell. First build downloads public images and dependencies. No paid cloud account is needed; local hardware and network access are required.
 
 ```bash
 export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
 export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
 make up
+make ready
+make demo
 make smoke
 make automation
 make down
