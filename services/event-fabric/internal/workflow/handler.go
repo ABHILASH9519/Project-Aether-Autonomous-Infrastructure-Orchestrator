@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"strconv"
 	"time"
 
 	"aether/event-fabric/internal/lifecycle"
@@ -20,6 +21,7 @@ import (
 type Repository interface {
 	Incident(context.Context,string)(store.Incident,error)
 	Job(context.Context,string)(store.Job,error)
+	Audit(context.Context,string,int64)(store.AuditPage,error)
 	Transition(context.Context,string,int64,string,string)(store.Incident,error)
 }
 
@@ -41,6 +43,16 @@ func Handler(repo Repository, token, approver string, gate policy.Gate) (http.Ha
 		j,err:=repo.Job(r.Context(),r.PathValue("id"))
 		respond(w,j,err)
 	})
+	mux.HandleFunc("GET /api/v1/incidents/{id}/audit",func(w http.ResponseWriter,r *http.Request){
+  var after int64
+  if raw:=r.URL.Query().Get("after");raw!=""{
+   v,err:=strconv.ParseInt(raw,10,64)
+   if err!=nil || v<0{http.Error(w,"invalid audit cursor",400);return}
+   after=v
+  }
+  page,err:=repo.Audit(r.Context(),r.PathValue("id"),after)
+  respond(w,page,err)
+ })
 	mux.HandleFunc("POST /api/v1/incidents/{id}/transitions",func(w http.ResponseWriter,r *http.Request){
 		r.Body=http.MaxBytesReader(w,r.Body,4096)
 		d:=json.NewDecoder(r.Body)

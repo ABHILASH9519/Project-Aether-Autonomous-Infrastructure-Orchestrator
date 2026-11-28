@@ -27,6 +27,9 @@ transition 3 execute_lab executing
 for i in {1..90}; do
   if curl -fsS -H "$auth" "$url" | jq -e '.state=="resolved" and .version==6' >/dev/null; then
     curl -fsS -H "$auth" "$url/job" | jq -e '.status=="succeeded" and .attempts>=1 and .attempts<=3 and .evidence=="fixture content verified"'
+    curl -fsS -H "$auth" "$url/audit" | jq -e '.entries | length==6 and map(.version)==[1,2,3,4,5,6] and map(.actor_role)==["operator","operator","approver","operator","worker","worker"]'
+    curl -fsS -H "$auth" "$url/audit?after=4" | jq -e '.entries | map(.version)==[5,6]'
+    test "$(curl -s -o /dev/null -w '%{http_code}' "$url/audit")" = 401
     exit 0
   fi
   sleep 2

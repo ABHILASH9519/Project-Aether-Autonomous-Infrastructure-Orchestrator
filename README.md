@@ -625,3 +625,7 @@ flowchart TD
 ![Actual scanner findings before and after Go toolchain upgrade](docs/architecture/visuals/security-scan-comparison.svg)
 
 [Initial scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46065864664) and [follow-up scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671). Counts are scanner result entries, not unique CVEs or a security clearance. Remaining findings require dependency remediation.
+
+### Auditable operator experience
+
+Authenticated `GET /api/v1/incidents/{id}/audit?after=0` returns the ordered transition history, including actor role, previous/next state, version and timestamp. Pages are limited to 100 entries; `next_after` is a continuation cursor. The execution smoke test verifies the six expected transitions and credential enforcement. New CI verification pending. Roles identify shared lab credentials, not individual people.
