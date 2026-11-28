@@ -20,7 +20,7 @@
 | Resilience | Duplicate-event suppression, dependency outage drills, retained PVCs and logical database restore |
 | Engineering evidence | Race tests, integration CI, measured load report, CycloneDX SBOM and vulnerability triage |
 
-**Verified baseline:** [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067786876) · [Immutable GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067787051) · [Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067477316) · [Security report](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671). New CLI and audit integration are undergoing separate verification. AETHER is a local lab, not a production automation product.
+**Verified baseline:** [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067786876) · [Immutable GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067787051) · [Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067477316) · [Security report](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342671). CLI, audit and automatic evidence delivery passed in [run 46131801803](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803). AETHER is a local lab, not a production automation product.
 
 ## Quick start (local lab)
 
@@ -670,7 +670,7 @@ sequenceDiagram
  CLI->>W: Read resolved state, job and audit
 ```
 
-Run `make demo` after both local API readiness checks pass. The CLI uses loopback-only endpoints, distinct role credentials and explicit lab approval. It never executes arbitrary host commands. New demo integration CI pending.
+Run `make demo` after both local API readiness checks pass. The CLI uses loopback-only endpoints, distinct role credentials and explicit lab approval. It never executes arbitrary host commands. [Demo integration passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803).
 
 ### Durable evidence delivery
 
@@ -688,3 +688,7 @@ flowchart LR
 The cloud smoke now checks automatic delivery, not a manual upload. LocalStack object storage is ephemeral; archive metadata records historical delivery, not continuing retention.
 
 Authenticated `GET /api/v1/incidents/{id}/archive` exposes archive delivery state, attempts and confirmed digest. The cloud outage drill pauses the emulator, verifies the approved repair still resolves and evidence remains pending with a recorded retry, and verifies archive delivery after recovery. CI verification pending.
+
+## Fixture transport identity
+
+The optional [mutual TLS overlay](docs/architecture/fixture-mtls.md) uses TLS 1.3, a private lab CA, hostname verification and the executor URI SAN. A dedicated integration workflow tests approved repair and rejects missing/wrong client certificates. The base local lab remains plaintext; the overlay is not cluster-wide TLS. New CI pending.

@@ -3,6 +3,7 @@ package lab
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"fmt"
 	"errors"
 	"io"
@@ -18,11 +19,16 @@ type Adapter struct {
 }
 
 func NewAdapter(raw string)(*Adapter,error){return NewAdapterWithTimeout(raw,2*time.Second)}
-func NewAdapterWithTimeout(raw string,timeout time.Duration)(*Adapter,error){
+func NewAdapterWithTimeout(raw string,timeout time.Duration)(*Adapter,error){return NewAdapterWithTLS(raw,timeout,nil)}
+func NewAdapterWithTLS(raw string,timeout time.Duration,config *tls.Config)(*Adapter,error){
 	if timeout<=0 || timeout>45*time.Second{return nil,errors.New("invalid fixture timeout")}
 	u,err:=url.Parse(raw)
 	if err!=nil || u.Host=="" || (u.Scheme!="http" && u.Scheme!="https") || u.User!=nil || u.RawQuery!="" || u.Fragment!=""{return nil,errors.New("invalid fixture URL")}
-	return &Adapter{strings.TrimRight(raw,"/"),&http.Client{Timeout:timeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}},nil
+	if config!=nil&&u.Scheme!="https"{return nil,errors.New("fixture TLS requires https")}
+ transport:=http.DefaultTransport.(*http.Transport).Clone()
+ transport.Proxy=nil
+ if config!=nil{transport.TLSClientConfig=config}
+ return &Adapter{strings.TrimRight(raw,"/"),&http.Client{Transport:transport,Timeout:timeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}},nil
 }
 
 // Repair writes the fixed desired content through the fixture API and

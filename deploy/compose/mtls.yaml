@@ -1,0 +1,21 @@
+# Optional strict fixture transport; mount only each service's own key.
+services:
+  fixture:
+    environment:
+      LAB_TLS_CA: /tls/ca.crt
+      LAB_TLS_CERT: /tls/tls.crt
+      LAB_TLS_KEY: /tls/tls.key
+    volumes:
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/ca.crt:/tls/ca.crt:ro
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/fixture.crt:/tls/tls.crt:ro
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/fixture.key:/tls/tls.key:ro
+  executor:
+    environment:
+      LAB_FIXTURE_URL: https://fixture:8083
+      LAB_TLS_CA: /tls/ca.crt
+      LAB_TLS_CERT: /tls/tls.crt
+      LAB_TLS_KEY: /tls/tls.key
+    volumes:
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/ca.crt:/tls/ca.crt:ro
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/executor.crt:/tls/tls.crt:ro
+      - ${AETHER_TLS_DIR:?generate local TLS materials}/executor.key:/tls/tls.key:ro

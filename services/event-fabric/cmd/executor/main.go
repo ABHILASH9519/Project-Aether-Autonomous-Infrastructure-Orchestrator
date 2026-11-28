@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"log"
 	"os"
@@ -35,7 +36,9 @@ func main(){
 		if err!=nil || repairTimeout<=0 || repairTimeout>45*time.Second{log.Fatal("invalid LAB_REPAIR_TIMEOUT")}
 		clientTimeout=repairTimeout
 	}
-	a,err:=lab.NewAdapterWithTimeout(os.Getenv("LAB_FIXTURE_URL"),clientTimeout)
+	var config *tls.Config
+ if f:=lab.TLSFromEnv();f.Enabled(){config,err=f.Client();if err!=nil{log.Fatal(err)}}
+ a,err:=lab.NewAdapterWithTLS(os.Getenv("LAB_FIXTURE_URL"),clientTimeout,config)
 	if err!=nil{log.Fatal(err)}
 	initCtx,cancel:=context.WithTimeout(ctx,15*time.Second)
 	err=st.Migrate(initCtx)

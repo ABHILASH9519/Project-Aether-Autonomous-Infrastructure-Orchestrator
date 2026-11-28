@@ -20,5 +20,10 @@ func main(){
 		timeout=50*time.Second
 	}
 	s:=&http.Server{Addr:":8083",Handler:handler,ReadHeaderTimeout:3*time.Second,ReadTimeout:5*time.Second,WriteTimeout:timeout,IdleTimeout:30*time.Second}
-	log.Fatal(s.ListenAndServe())
+	if f:=lab.TLSFromEnv();f.Enabled(){
+  config,err:=f.Server();if err!=nil{log.Fatal(err)}
+  s.TLSConfig=config
+  log.Fatal(s.ListenAndServeTLS("",""))
+ }
+ log.Fatal(s.ListenAndServe())
 }
