@@ -1,23 +1,15 @@
-# Local cloud evidence archive
+# Automatic LocalStack S3 evidence archive
 
-The optional LocalStack S3 lab exports authenticated remediation job evidence from the workflow API and verifies a byte-for-byte object round trip. The smoke script uses awslocal inside the emulator container, not real AWS credentials. No cloud bill or public endpoint is needed.
+The optional cloud profile runs a Go archive worker. Terminal remediation jobs become eligible through PostgreSQL migration 3. The worker claims a job, serializes the exact job API JSON, writes it to a fixed emulator bucket, reads it back, verifies byte equality, and records the SHA-256 and archive timestamp. The integration smoke only reads S3 and verifies the stored checksum; it no longer performs the upload itself.
 
 ```mermaid
 flowchart LR
-  Workflow[Authenticated job evidence API] --> Export[Local evidence export script]
-  Export --> S3[(LocalStack S3)]
-  S3 --> Readback[Download and compare bytes]
+ Job[(Terminal remediation job)] --> Worker[Go archiver]
+ Worker --> S3[(LocalStack S3)]
+ S3 --> Verify[Byte-for-byte readback]
+ Verify --> Mark[(Archive checksum and timestamp)]
+ Worker -->|Unavailable| Retry[Durable retry with capped delay]
+ Retry --> Worker
 ```
 
-Run using a disposable local stack:
-
-```sh
-export AETHER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
-export AETHER_APPROVER_TOKEN="$(openssl rand -hex 32)"
-export AETHER_EXECUTION_ID="cloud-demo-$(date +%s)"
-docker compose -f deploy/compose/events.yaml --profile workflow --profile cloud up -d --build
-bash tests/execution-smoke.sh
-bash tests/cloud-evidence-smoke.sh
-```
-
-The export is explicit, not an automatically delivered archive. LocalStack is ephemeral in this profile; object lifecycle, immutable retention, encryption and production IAM are not implemented. The script uses synthetic incident data and a fixed local bucket. The upload/download round trip passed in [run 45898190136](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/45898190136).
+The adapter deliberately supports only the internal LocalStack endpoint with fixed dummy credentials and a fixed bucket. It implements the small required path-style S3 SigV4 request subset, not a general AWS client. No real AWS credentials or public targets are accepted. The emulator has ephemeral object storage; a successful archive records historical delivery and does not guarantee the object survives emulator destruction. Retention, production IAM, encryption, rehydration and Kubernetes cloud-worker deployment remain outside the verified scope. Previous explicit export passed; automatic worker verification pending.

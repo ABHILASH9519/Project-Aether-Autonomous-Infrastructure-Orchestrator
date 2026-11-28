@@ -188,6 +188,22 @@ services:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
       - "127.0.0.1:16686:16686"
+  archiver:
+    profiles: ["cloud"]
+    build:
+      context: ../../services/event-fabric
+    entrypoint: ["/archiver"]
+    environment:
+      DATABASE_URL: postgres://aether:local-dev-only@postgres:5432/aether?sslmode=disable
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
   localstack:
     profiles: ["cloud"]
     image: localstack/localstack:3.8.0

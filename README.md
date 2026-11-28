@@ -674,4 +674,15 @@ Run `make demo` after both local API readiness checks pass. The CLI uses loopbac
 
 ### Durable evidence delivery
 
-The next cloud milestone separates remediation completion from archive delivery. Migration 3 records retry and delivery metadata for terminal jobs, and a stable SHA-256 object key makes retries idempotent at the object-content level. [Design](docs/architecture/evidence-delivery.md). Storage integration coverage is added; the actual LocalStack worker is not yet wired in.
+The next cloud milestone separates remediation completion from archive delivery. Migration 3 records retry and delivery metadata for terminal jobs, and a stable SHA-256 object key makes retries idempotent at the object-content level. [Design](docs/architecture/evidence-delivery.md). The Go archiver is wired into the Compose cloud profile and verifies actual uploaded bytes. New CI verification pending.
+
+```mermaid
+flowchart LR
+ Terminal[(Terminal job)] --> Archive[Go archive worker]
+ Archive --> S3[(LocalStack S3)] --> Verify[Read and compare bytes]
+ Verify --> Mark[(Archive digest and timestamp)]
+ Archive -->|Unavailable| Retry[Durable retry]
+ Retry --> Archive
+```
+
+The cloud smoke now checks automatic delivery, not a manual upload. LocalStack object storage is ephemeral; archive metadata records historical delivery, not continuing retention.
