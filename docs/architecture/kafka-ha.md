@@ -11,4 +11,4 @@ docker compose -p aether-ha -f deploy/compose/events.yaml -f deploy/compose/kafk
 
 Use a new isolated Compose project: never attach a previous single-broker volume to the new KRaft quorum. The drill verifies three in-sync replicas, completes a real synthetic incident, stops the actual leader of partition zero, waits for two in-sync replicas, completes a second approved repair, checks the first incident remains unchanged, then restores all three replicas. The test allows bounded publication retries using a stable event ID.
 
-This is broker-process fault tolerance on one physical host, not node/zone disaster recovery. PostgreSQL, Redis, OPA and the fixture remain single instances in this profile. Plaintext Kafka is private to the local network. CI verification pending.
+This is broker-process fault tolerance on one physical host, not node/zone disaster recovery. PostgreSQL, Redis, OPA and the fixture remain single instances in this profile. Plaintext Kafka is private to the local network. [Broker-leader failover CI passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153821637).

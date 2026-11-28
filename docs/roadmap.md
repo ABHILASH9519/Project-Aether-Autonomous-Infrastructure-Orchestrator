@@ -10,10 +10,10 @@ The project implements a local-first, approval-gated infrastructure orchestratio
 | Ansible/Puppet reconciliation | Verified | [Automation](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883663) |
 | LocalStack automatic evidence delivery and outage recovery | Verified | [Cloud and event integration](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803) |
 | Monitoring, traces, alerts and measured load | Verified | [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883622) |
-| Kubernetes PVCs, ingress isolation, GitOps digest delivery | Verified prior revision; latest worker recovery retest pending | [Prior Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138810085), [GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883618) |
+| Kubernetes PVCs, ingress isolation, GitOps digest delivery | Verified, including corrected worker recovery | [Corrected Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153714212), [GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883618) |
 | Fixture mutual TLS | Verified | [TLS](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883612) |
 | Application-image HIGH/CRITICAL gate | Verified | [Enforced security gate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153759005) |
-| Three-broker Kafka process failover | Implemented; CI pending | [Design](architecture/kafka-ha.md) |
+| Three-broker Kafka process failover | Verified | [Leader failover CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153821637) |
 | Three-instance PostgreSQL primary failover | Implemented; CI pending | [Design](architecture/postgres-ha.md) |
 | Same-revision release gate | Implemented; validation pending | [Checklist](release-checklist.md) |
 

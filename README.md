@@ -723,7 +723,7 @@ The Helm chart now allows independently configured replicas for five application
 
 The [security dependency candidate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138764858) passed module verification, Go tests, vet and build. The exact generated module files are committed. Full integration and vulnerability rescan pending; the report-only scan is not yet an enforcing security gate.
 
-Worker recovery passed once, then a later run exposed a transient 503 after pod deletion. The recovery drill now tests bounded same-ID publication retries while retaining the one-effect invariant; normal smoke tests remain strict. Corrected CI pending.
+Worker recovery passed once, then a later run exposed a transient 503 after pod deletion. The recovery drill now tests bounded same-ID publication retries while retaining the one-effect invariant; normal smoke tests remain strict. [Corrected worker recovery passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153714212).
 
 ### Application-image security gate
 
@@ -744,7 +744,7 @@ flowchart LR
  K3 --> Consumer
 ```
 
-An optional [three-broker local deployment](docs/architecture/kafka-ha.md) uses replication factor 3, minimum ISR 2 and separate volumes. CI stops the actual partition leader and requires another approved workflow to complete, then checks replica recovery. New CI pending. This is process-level redundancy on one host, not full infrastructure HA.
+An optional [three-broker local deployment](docs/architecture/kafka-ha.md) uses replication factor 3, minimum ISR 2 and separate volumes. CI stops the actual partition leader and requires another approved workflow to complete, then checks replica recovery. [Kafka broker failover passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153821637). This is process-level redundancy on one host, not full infrastructure HA.
 
 ## Replicated PostgreSQL deployment
 
@@ -761,4 +761,4 @@ The optional [CloudNativePG deployment](docs/architecture/postgres-ha.md) uses t
 
 ## Release validation
 
-The [local release checklist](docs/release-checklist.md) defines nine required integration workflows. The manually dispatched [release candidate validation workflow](.github/workflows/release-validation.yml) triggers those workflows and checks that every one passes at the exact same main SHA. It rejects stale, missing, failed or skipped results, and uploads a run manifest. No release is tagged or published until validation and review. The [roadmap](docs/roadmap.md) distinguishes the local release from remaining production-readiness work.
+The [local release checklist](docs/release-checklist.md) defines nine required integration workflows. The [release candidate validation workflow](.github/workflows/release-validation.yml) triggers those workflows on manual dispatch or a change to the release gate itself, and checks that every one passes at the exact same main SHA. It rejects stale, missing, failed or skipped results, and uploads a run manifest. No release is tagged or published until validation and review. The [roadmap](docs/roadmap.md) distinguishes the local release from remaining production-readiness work.

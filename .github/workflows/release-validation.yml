@@ -1,5 +1,8 @@
 name: Release candidate validation
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/release-validation.yml", "tests/release-validation.sh"]
   workflow_dispatch:
 permissions:
   contents: read
