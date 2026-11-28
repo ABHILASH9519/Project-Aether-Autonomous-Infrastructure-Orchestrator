@@ -13,10 +13,13 @@ jobs:
     env:
       AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
       AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only
-      AETHER_TLS_DIR: ${{ runner.temp }}/aether-tls
     steps:
       - uses: actions/checkout@v4
-      - run: bash tests/generate-lab-certs.sh
+      - name: Generate disposable certificates
+        run: |
+          export AETHER_TLS_DIR="$RUNNER_TEMP/aether-tls"
+          echo "AETHER_TLS_DIR=$AETHER_TLS_DIR" >> "$GITHUB_ENV"
+          bash tests/generate-lab-certs.sh
       - run: docker compose -f deploy/compose/events.yaml -f deploy/compose/mtls.yaml --profile workflow up -d --build
       - run: bash tests/event-fabric-smoke.sh
       - run: bash tests/mtls-smoke.sh
