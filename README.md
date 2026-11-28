@@ -671,3 +671,7 @@ sequenceDiagram
 ```
 
 Run `make demo` after both local API readiness checks pass. The CLI uses loopback-only endpoints, distinct role credentials and explicit lab approval. It never executes arbitrary host commands. New demo integration CI pending.
+
+### Durable evidence delivery
+
+The next cloud milestone separates remediation completion from archive delivery. Migration 3 records retry and delivery metadata for terminal jobs, and a stable SHA-256 object key makes retries idempotent at the object-content level. [Design](docs/architecture/evidence-delivery.md). Storage integration coverage is added; the actual LocalStack worker is not yet wired in.
