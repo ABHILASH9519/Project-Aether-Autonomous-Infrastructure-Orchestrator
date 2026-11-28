@@ -1,0 +1,24 @@
+name: Kafka broker failover
+on:
+  push:
+    branches: [main]
+    paths: ["services/event-fabric/**", "deploy/compose/events.yaml", "deploy/compose/kafka-ha.yaml", "tests/kafka-ha-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/kafka-ha.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  broker-failover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
+      AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start fresh three-broker lab
+        run: docker compose -p aether-ha -f deploy/compose/events.yaml -f deploy/compose/kafka-ha.yaml --profile workflow up -d --build
+      - run: bash tests/kafka-ha-smoke.sh
+      - if: failure()
+        run: docker compose -p aether-ha -f deploy/compose/events.yaml -f deploy/compose/kafka-ha.yaml --profile workflow logs --tail 150
+      - if: always()
+        run: docker compose -p aether-ha -f deploy/compose/events.yaml -f deploy/compose/kafka-ha.yaml --profile workflow down -v

@@ -728,3 +728,20 @@ Worker recovery passed once, then a later run exposed a transient 503 after pod 
 ### Application-image security gate
 
 [Post-upgrade scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883611) reported **zero HIGH and CRITICAL findings** for the event-fabric container. CI now enforces that threshold, requires Go-binary scan coverage and retains the SBOM and vulnerability reports even on failure. The gate does not scan every dependency service image or establish production security. Event-fabric requires Go 1.26+; CI builds use Go 1.26.11. New gate CI pending.
+
+## Replicated Kafka deployment
+
+```mermaid
+flowchart LR
+ Ingest --> K1[Kafka broker/controller 1]
+ Ingest --> K2[Kafka broker/controller 2]
+ Ingest --> K3[Kafka broker/controller 3]
+ K1 <--> K2
+ K2 <--> K3
+ K3 <--> K1
+ K1 --> Consumer
+ K2 --> Consumer
+ K3 --> Consumer
+```
+
+An optional [three-broker local deployment](docs/architecture/kafka-ha.md) uses replication factor 3, minimum ISR 2 and separate volumes. CI stops the actual partition leader and requires another approved workflow to complete, then checks replica recovery. New CI pending. This is process-level redundancy on one host, not full infrastructure HA.
