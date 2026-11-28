@@ -13,3 +13,7 @@ The event fabric integration job now depends on its Go compile, race, vet and de
 When a connector returns an ambiguous error during a write, read the remote main HEAD and inspect the changed tree before retrying. Use an expected-parent compare-and-swap and never force-push. Record the new commit and exact CI run rather than declaring old red checks green.
 
 The corrected registry workflow verified the actual CRI pull, Argo CD controller setup, application bootstrap, approved execution, replica self-healing and digest-pinned workload readiness. No test was disabled to obtain the successful integration result.
+
+## Release candidate Kafka regression
+
+[Run 46154148678](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46154148678) completed the first approved incident, then exited 255 before logging a broker stop. The early-exit awk parser in the partition-leader lookup is a suspected cause, not conclusively proven from the truncated diagnostics. The corrected drill captures complete CLI output before parsing, retries metadata lookup within a bounded window, logs the selected broker, verifies the selected broker actually stopped, and retains the existing two-ISR, second approved incident and three-ISR recovery assertions. New candidate verification required.

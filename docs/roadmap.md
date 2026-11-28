@@ -13,8 +13,8 @@ The project implements a local-first, approval-gated infrastructure orchestratio
 | Kubernetes PVCs, ingress isolation, GitOps digest delivery | Verified, including corrected worker recovery | [Corrected Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153714212), [GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883618) |
 | Fixture mutual TLS | Verified | [TLS](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883612) |
 | Application-image HIGH/CRITICAL gate | Verified | [Enforced security gate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153759005) |
-| Three-broker Kafka process failover | Verified | [Leader failover CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153821637) |
-| Three-instance PostgreSQL primary failover | Implemented; CI pending | [Design](architecture/postgres-ha.md) |
+| Three-broker Kafka process failover | Prior pass; exact-revision regression under retest | [Leader failover CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153821637) |
+| Three-instance PostgreSQL primary failover | Verified | [Primary failover CI](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46154151065) |
 | Same-revision release gate | Implemented; validation pending | [Checklist](release-checklist.md) |
 
 ## Subsequent production-readiness work

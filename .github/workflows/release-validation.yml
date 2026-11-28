@@ -2,7 +2,7 @@ name: Release candidate validation
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/release-validation.yml", "tests/release-validation.sh"]
+    paths: [".github/workflows/release-validation.yml", "tests/release-validation.sh", "tests/kafka-ha-smoke.sh"]
   workflow_dispatch:
 permissions:
   contents: read

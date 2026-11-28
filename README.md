@@ -762,3 +762,7 @@ The optional [CloudNativePG deployment](docs/architecture/postgres-ha.md) uses t
 ## Release validation
 
 The [local release checklist](docs/release-checklist.md) defines nine required integration workflows. The [release candidate validation workflow](.github/workflows/release-validation.yml) triggers those workflows on manual dispatch or a change to the release gate itself, and checks that every one passes at the exact same main SHA. It rejects stale, missing, failed or skipped results, and uploads a run manifest. No release is tagged or published until validation and review. The [roadmap](docs/roadmap.md) distinguishes the local release from remaining production-readiness work.
+
+### Release candidate regression follow-up
+
+[Exact-revision validation at e773084](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46154119172) passed eight of nine checks, including [PostgreSQL primary failover](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46154151065). Kafka failed after the first approved repair and before the broker stop; the metadata lookup now captures complete CLI output and reports the selected leader, with bounded retries. The actual broker-stop and recovery assertions remain required. A new exact-revision validation is triggered by this fix. No release certification yet.

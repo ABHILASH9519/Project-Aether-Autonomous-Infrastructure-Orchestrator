@@ -19,7 +19,20 @@ replicas_ready 3
 export AETHER_EXECUTION_ID="ha-before-$(date +%s)-$$"
 AETHER_INGEST_ATTEMPTS=10 bash tests/execution-smoke.sh
 before="$AETHER_EXECUTION_ID"
-leader=$(describe | awk '/Partition: 0([[:space:]]|$)/ {for(i=1;i<=NF;i++)if($i=="Leader:"){print $(i+1);exit}}')
+# Consume the entire CLI output before parsing it. An early awk exit in
+# a pipefail pipeline can interrupt docker exec and hide a valid leader.
+leader=""
+for i in {1..15}; do
+  if metadata=$(describe); then
+    printf '%s\n' "$metadata"
+    leader=$(awk '/Partition: 0([[:space:]]|$)/ {for(i=1;i<=NF;i++)if($i=="Leader:"){print $(i+1)}}' <<< "$metadata")
+    if [[ "$leader" =~ ^[123]$ ]]; then break; fi
+  else
+    echo "Partition metadata lookup failed on attempt $i" >&2
+  fi
+  sleep 2
+done
+echo "Partition zero leader before fault: $leader"
 case "$leader" in
  1) victim=kafka; admin=kafka-2 ;;
  2) victim=kafka-2; admin=kafka-3 ;;
@@ -27,7 +40,9 @@ case "$leader" in
  *) echo "Invalid partition leader: $leader" >&2; exit 1 ;;
 esac
 trap '"${compose[@]}" start "$victim" >/dev/null || true' EXIT
+echo "Stopping partition leader service: $victim"
 "${compose[@]}" stop "$victim"
+test -z "$("${compose[@]}" ps --status running -q "$victim")"
 # Two remaining replicas must be in sync before testing write availability.
 for i in {1..60}; do
  if replicas_ready 2; then break; fi
