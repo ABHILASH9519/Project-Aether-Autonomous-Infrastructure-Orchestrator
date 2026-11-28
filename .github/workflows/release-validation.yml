@@ -1,0 +1,25 @@
+name: Release candidate validation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: aether-release-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dispatch and verify all required workflows at one revision
+        run: bash tests/release-validation.sh
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-validation-report
+          path: ${{ runner.temp }}/aether-release-validation.json
+          if-no-files-found: ignore

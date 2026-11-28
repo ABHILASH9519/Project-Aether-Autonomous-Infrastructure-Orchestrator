@@ -727,7 +727,7 @@ Worker recovery passed once, then a later run exposed a transient 503 after pod 
 
 ### Application-image security gate
 
-[Post-upgrade scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883611) reported **zero HIGH and CRITICAL findings** for the event-fabric container. CI now enforces that threshold, requires Go-binary scan coverage and retains the SBOM and vulnerability reports even on failure. The gate does not scan every dependency service image or establish production security. Event-fabric requires Go 1.26+; CI builds use Go 1.26.11. New gate CI pending.
+[Post-upgrade scan](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883611) reported **zero HIGH and CRITICAL findings** for the event-fabric container. CI now enforces that threshold, requires Go-binary scan coverage and retains the SBOM and vulnerability reports even on failure. The gate does not scan every dependency service image or establish production security. Event-fabric requires Go 1.26+; CI builds use Go 1.26.11. [Enforced security gate passed](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153759005).
 
 ## Replicated Kafka deployment
 
@@ -758,3 +758,7 @@ flowchart LR
 ```
 
 The optional [CloudNativePG deployment](docs/architecture/postgres-ha.md) uses three instances and required synchronous replication. Dedicated CI deletes the primary, compares durable incident/job/audit state after promotion and completes another workflow. The default chart remains single-instance. The new profile is not yet verified, and does not claim multi-node or multi-zone disaster recovery.
+
+## Release validation
+
+The [local release checklist](docs/release-checklist.md) defines nine required integration workflows. The manually dispatched [release candidate validation workflow](.github/workflows/release-validation.yml) triggers those workflows and checks that every one passes at the exact same main SHA. It rejects stale, missing, failed or skipped results, and uploads a run manifest. No release is tagged or published until validation and review. The [roadmap](docs/roadmap.md) distinguishes the local release from remaining production-readiness work.

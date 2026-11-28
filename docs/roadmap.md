@@ -1,37 +1,22 @@
-# Roadmap and acceptance criteria
+# AETHER roadmap and release acceptance
 
-Status key: ✅ implemented, ⏳ in progress, ⬜ planned.
+The project implements a local-first, approval-gated infrastructure orchestration platform. The first local release is defined by testable engineering invariants rather than a claim of production readiness. See the [release checklist](release-checklist.md) for the exact-revision gate.
 
-## Phase 0 — Foundation
-- ✅ Repository README and target architecture
-- ✅ Architecture decision record and public API integration policy
-- ⏳ Minimal Go control API, unit tests, container build and CI
-- ⬜ CI pipeline green on GitHub
+| Milestone | Current status | Evidence |
+| --- | --- | --- |
+| Go services and event contract | Verified | [Control API](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46067342602), [event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883622) |
+| Kafka ingestion, deduplication and durable state | Verified | [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883622) |
+| OPA approval, bounded remediation and audit | Verified | [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883622) |
+| Ansible/Puppet reconciliation | Verified | [Automation](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883663) |
+| LocalStack automatic evidence delivery and outage recovery | Verified | [Cloud and event integration](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46131801803) |
+| Monitoring, traces, alerts and measured load | Verified | [Event fabric](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883622) |
+| Kubernetes PVCs, ingress isolation, GitOps digest delivery | Verified prior revision; latest worker recovery retest pending | [Prior Kubernetes](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138810085), [GitOps](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883618) |
+| Fixture mutual TLS | Verified | [TLS](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138883612) |
+| Application-image HIGH/CRITICAL gate | Verified | [Enforced security gate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46153759005) |
+| Three-broker Kafka process failover | Implemented; CI pending | [Design](architecture/kafka-ha.md) |
+| Three-instance PostgreSQL primary failover | Implemented; CI pending | [Design](architecture/postgres-ha.md) |
+| Same-revision release gate | Implemented; validation pending | [Checklist](release-checklist.md) |
 
-## Phase 1 — Event backbone
-- ⬜ Kafka Compose profile and documented topics
-- ⬜ Versioned event envelope with validation
-- ⬜ Producer/consumer tests for duplicate and malformed messages
-- ⬜ Bounded retries and DLQ
+## Subsequent production-readiness work
 
-## Phase 2 — Durable incident state
-- ⬜ PostgreSQL migrations
-- ⬜ Incident state machine with optimistic concurrency
-- ⬜ Transactional outbox/inbox and audit projections
-- ⬜ End-to-end replay and recovery tests
-
-## Phase 3 — Safety and execution
-- ⬜ OPA rules and approval workflow
-- ⬜ Dry-run remediation executor and idempotency
-- ⬜ Kubernetes and Ansible adapters guarded by least privilege
-- ⬜ Kill switch and audit evidence
-
-## Phase 4 — Observability and delivery
-- ⬜ Prometheus metrics and OpenTelemetry traces
-- ⬜ Structured logs and Grafana dashboards
-- ⬜ Helm chart and k3d/Kubernetes deployment
-- ⬜ Security scan and reproducible chaos-test runbook
-
-## Definition of done
-
-Each milestone needs documentation, tests, local reproducibility, and a clear distinction between simulated and live capabilities.
+The local release does not authorize production infrastructure changes. Individual identities, full service-to-service TLS, multi-host or multi-zone failover, independent backups and coordinated Kafka/PostgreSQL disaster recovery, full infrastructure-image security auditing, retention and production IAM remain outside the local acceptance scope. An emergency stop for in-flight external effects requires a separate threat model; the current fixed synthetic adapter cannot perform arbitrary host operations. Do not confuse local replicas with production availability guarantees.

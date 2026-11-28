@@ -8,6 +8,7 @@ on:
     paths:
       - "services/control-api/**"
       - ".github/workflows/control-api.yml"
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
