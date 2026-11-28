@@ -718,3 +718,7 @@ flowchart LR
 ```
 
 The Helm chart now allows independently configured replicas for five application processes, retaining a singleton fixture. A dedicated Kubernetes drill scales consumer, relay and executor to two replicas, deletes one of each, runs a full approved repair and checks one durable incident effect. See [application scaling](docs/architecture/application-scaling.md). Single-node Kafka/PostgreSQL remain a limitation; new CI pending.
+
+### Dependency remediation
+
+The [security dependency candidate](https://github.com/ABHILASH9519/Project-Aether-Autonomous-Infrastructure-Orchestrator/actions/runs/46138764858) passed module verification, Go tests, vet and build. The exact generated module files are committed. Full integration and vulnerability rescan pending; the report-only scan is not yet an enforcing security gate.
