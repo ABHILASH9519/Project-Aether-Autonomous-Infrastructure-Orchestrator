@@ -1,0 +1,48 @@
+name: PostgreSQL primary failover
+on:
+  push:
+    branches: [main]
+    paths: ["services/event-fabric/**", "deploy/helm/**", "deploy/ha/postgres/**", "tests/postgres-ha-smoke.sh", "tests/execution-smoke.sh", ".github/workflows/postgres-ha.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  primary-failover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AETHER_OPERATOR_TOKEN: ci-disposable-operator-token-only
+      AETHER_APPROVER_TOKEN: ci-disposable-approver-token-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: aether
+          version: v0.30.0
+          node_image: kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
+      - name: Install versioned CloudNativePG operator
+        run: |
+          kubectl apply --server-side -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.3.yaml
+          kubectl -n cnpg-system rollout status deployment/cnpg-controller-manager --timeout=300s
+          kubectl wait --for=condition=Established crd/clusters.postgresql.cnpg.io --timeout=120s
+      - name: Provision synchronous PostgreSQL cluster
+        run: |
+          kubectl create namespace aether
+          kubectl -n aether create secret generic aether-pg-bootstrap --type=kubernetes.io/basic-auth --from-literal=username=aether --from-literal=password=ci-only
+          kubectl apply -f deploy/ha/postgres/network-policy.yaml
+          kubectl apply -f deploy/ha/postgres/cluster.yaml
+          kubectl -n aether wait --for=condition=Ready cluster/aether-postgres --timeout=600s
+      - run: docker build -t aether-event-fabric:local services/event-fabric
+      - run: kind load docker-image aether-event-fabric:local --name aether
+      - name: Install AETHER using external read-write service
+        run: |
+          kubectl -n aether create secret generic aether-local --from-literal=postgres-password=ci-only --from-literal=database-url='postgres://aether:ci-only@aether-postgres-rw:5432/aether?sslmode=require' --from-literal=operator-token="$AETHER_OPERATOR_TOKEN" --from-literal=approver-token="$AETHER_APPROVER_TOKEN"
+          helm lint deploy/helm/aether --set postgres.bundled=false
+          helm upgrade --install aether deploy/helm/aether -n aether --set postgres.bundled=false
+      - run: bash tests/postgres-ha-smoke.sh
+      - if: failure()
+        run: |
+          kubectl -n aether get cluster,pods,pvc,events || true
+          kubectl -n aether describe cluster aether-postgres || true
+          kubectl -n cnpg-system logs deployment/cnpg-controller-manager --tail=200 || true
+          for app in consumer workflow executor relay; do kubectl -n aether logs -l app="$app" --tail=100 || true; done

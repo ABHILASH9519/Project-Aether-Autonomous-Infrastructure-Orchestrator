@@ -72,6 +72,17 @@
           "maximum": 5
         }
       }
+    },
+    "postgres": {
+      "type": "object",
+      "required": [
+        "bundled"
+      ],
+      "properties": {
+        "bundled": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

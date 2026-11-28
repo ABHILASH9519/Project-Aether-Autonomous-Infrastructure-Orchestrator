@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: aether-postgres-ha-ingress
+  namespace: aether
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: aether-postgres
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: aether-postgres
+      ports:
+        - {port: 5432, protocol: TCP}
+        - {port: 8000, protocol: TCP}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - {port: 5432, protocol: TCP}
+        - {port: 8000, protocol: TCP}
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [consumer, relay, workflow, executor]
+      ports:
+        - {port: 5432, protocol: TCP}

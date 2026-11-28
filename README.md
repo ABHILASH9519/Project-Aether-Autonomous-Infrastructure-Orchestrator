@@ -745,3 +745,16 @@ flowchart LR
 ```
 
 An optional [three-broker local deployment](docs/architecture/kafka-ha.md) uses replication factor 3, minimum ISR 2 and separate volumes. CI stops the actual partition leader and requires another approved workflow to complete, then checks replica recovery. New CI pending. This is process-level redundancy on one host, not full infrastructure HA.
+
+## Replicated PostgreSQL deployment
+
+```mermaid
+flowchart LR
+ Worker[Go services] --> RW[Stable read-write service]
+ RW --> Primary[Current primary]
+ Primary -->|Synchronous quorum| Standby1[Standby 1]
+ Primary -->|Synchronous quorum| Standby2[Standby 2]
+ Operator[CloudNativePG] -->|Promote after failure| Standby1
+```
+
+The optional [CloudNativePG deployment](docs/architecture/postgres-ha.md) uses three instances and required synchronous replication. Dedicated CI deletes the primary, compares durable incident/job/audit state after promotion and completes another workflow. The default chart remains single-instance. The new profile is not yet verified, and does not claim multi-node or multi-zone disaster recovery.

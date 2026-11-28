@@ -30,3 +30,7 @@ replicas:
   relay: 1
   workflow: 1
   executor: 1
+
+postgres:
+  # Set false only when an externally provisioned PostgreSQL service is ready.
+  bundled: true

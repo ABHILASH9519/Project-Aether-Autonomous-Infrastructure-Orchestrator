@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: aether-postgres
+  namespace: aether
+spec:
+  instances: 3
+  # Disposable kind profile uses the supported operator's default PostgreSQL image.
+  bootstrap:
+    initdb:
+      database: aether
+      owner: aether
+      secret:
+        name: aether-pg-bootstrap
+  storage:
+    size: 2Gi
+  postgresql:
+    synchronous:
+      method: any
+      number: 1
+      dataDurability: required
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 768Mi
+      cpu: "1"

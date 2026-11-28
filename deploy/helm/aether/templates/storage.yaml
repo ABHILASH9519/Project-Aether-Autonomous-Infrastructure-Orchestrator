@@ -1,5 +1,6 @@
 {{- if .Values.persistence.enabled }}
 {{- range $name, $size := dict "postgres" .Values.persistence.postgresSize "kafka" .Values.persistence.kafkaSize }}
+{{- if or (ne $name "postgres") $.Values.postgres.bundled }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -16,5 +17,6 @@ spec:
   resources:
     requests:
       storage: {{ $size | quote }}
+{{- end }}
 {{- end }}
 {{- end }}

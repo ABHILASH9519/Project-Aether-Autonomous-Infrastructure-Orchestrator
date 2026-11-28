@@ -1,0 +1,7 @@
+# Optional replicated PostgreSQL deployment
+
+CloudNativePG 1.29.3 provisions three PostgreSQL instances with separate PVCs. Required quorum-based synchronous replication waits for one standby acknowledgment before commits return. The operator manages primary promotion and the stable read-write service. AETHER uses that service through the existing secret and disables its bundled PostgreSQL Deployment and claim using postgres.bundled=false. Network policy explicitly allows database clients and operator/replica traffic.
+
+The CI test verifies streaming replication, completes an approved workflow, captures incident, job and audit JSON, deletes the current primary pod, waits for a different primary, compares durable records, then completes another approved workflow and checks three ready instances. It uses sslmode=require (encryption without server identity validation); authenticated TLS for PostgreSQL clients remains a separate hardening task.
+
+References: https://cloudnative-pg.io/docs/1.29/installation_upgrade/ and https://cloudnative-pg.io/docs/1.29/replication/. See the [dedicated workflow](../../.github/workflows/postgres-ha.yml) for exact reproducible setup. Use only a fresh isolated kind cluster; there is no automatic migration from the bundled PostgreSQL database. The default lightweight chart is unchanged. This is process-level failover on a single host, not multi-zone disaster recovery. The operator and database image are not covered by the application-image vulnerability gate. New integration CI pending.
